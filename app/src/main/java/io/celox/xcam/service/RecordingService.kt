@@ -8,6 +8,7 @@ import android.app.Service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -84,7 +85,18 @@ class RecordingService : LifecycleService() {
                     videoQuality = VideoQuality.values()[intent.getIntExtra(Constants.EXTRA_VIDEO_QUALITY, 1)],
                     enableAudio = intent.getBooleanExtra(Constants.EXTRA_ENABLE_AUDIO, true)
                 )
-                startForeground(Constants.NOTIFICATION_ID, createNotification("Initializing..."))
+
+                // Start foreground with proper service type for audio recording
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(
+                        Constants.NOTIFICATION_ID,
+                        createNotification("Initializing..."),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                    )
+                } else {
+                    startForeground(Constants.NOTIFICATION_ID, createNotification("Initializing..."))
+                }
+
                 startRecordingVideo()
             }
             Constants.ACTION_STOP_RECORDING -> {
