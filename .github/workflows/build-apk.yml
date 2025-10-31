@@ -35,9 +35,19 @@ jobs:
         VERSION_NAME=$(grep "versionName" app/build.gradle.kts | awk -F'"' '{print $2}')
         echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
-    - name: Rename APK
+    - name: List and rename APKs
       run: |
-        mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/XCam-${{ steps.version.outputs.version_name }}.apk
+        cd app/build/outputs/apk/release
+        ls -lh
+        # Rename all APKs to include version name
+        for apk in app-*.apk; do
+          if [ -f "$apk" ]; then
+            new_name=$(echo "$apk" | sed "s/app-/XCam-${{ steps.version.outputs.version_name }}-/")
+            mv "$apk" "$new_name"
+            echo "Renamed: $apk -> $new_name"
+          fi
+        done
+        ls -lh
 
     - name: Upload APK as artifact
       uses: actions/upload-artifact@v4
