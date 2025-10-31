@@ -12,15 +12,10 @@ android {
         applicationId = "io.celox.xcam"
         minSdk = 33
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        // Enable ABI splits to reduce APK size
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
-        }
     }
 
     buildTypes {
@@ -55,8 +50,8 @@ android {
         abi {
             isEnable = true
             reset()
-            include("arm64-v8a", "armeabi-v7a")
-            isUniversalApk = true // Also generate a universal APK
+            include("arm64-v8a")
+            isUniversalApk = false // Only arm64-v8a
         }
     }
     compileOptions {
@@ -83,15 +78,15 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    // Material Icons Extended needed for VideoLibrary, FiberManualRecord, VideoFile icons
+    // Consider custom icons in future to reduce size further
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
     implementation("androidx.navigation:navigation-compose:2.7.5")
 
-    // CameraX
+    // CameraX (only required modules)
     implementation("androidx.camera:camera-camera2:1.3.0")
     implementation("androidx.camera:camera-lifecycle:1.3.0")
     implementation("androidx.camera:camera-video:1.3.0")
-    implementation("androidx.camera:camera-view:1.3.0")
-    implementation("androidx.camera:camera-extensions:1.3.0")
 
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
@@ -106,10 +101,6 @@ dependencies {
 
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-
-    // Media3 for video playback
-    implementation("androidx.media3:media3-exoplayer:1.2.0")
-    implementation("androidx.media3:media3-ui:1.2.0")
 
     // Testing
     testImplementation(libs.junit)

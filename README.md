@@ -1,6 +1,6 @@
 # XCam - Background Video Recorder
 
-Eine native Android-App für Samsung Galaxy S24 (Android 13+), die Videoaufnahmen mit ausgeschaltetem Display ermöglicht.
+Eine native Android-App für moderne Android-Geräte (Android 13+), die Videoaufnahmen mit ausgeschaltetem Display ermöglicht.
 
 ## Features
 
@@ -31,8 +31,8 @@ Eine native Android-App für Samsung Galaxy S24 (Android 13+), die Videoaufnahme
 - **UI:** Jetpack Compose mit Material 3
 - **Architektur:** MVVM Pattern
 - **Kamera-API:** CameraX
-- **Min SDK:** 33 (Android 13)
-- **Target SDK:** 34 (Android 14)
+- **Unterstützte Geräte:** Android 13+ (API 33+)
+- **Architektur:** ARM64 (64-bit)
 
 ### Hauptkomponenten
 
@@ -162,8 +162,8 @@ Videos werden gespeichert unter:
 /storage/emulated/0/Movies/XCam/
 ```
 
-### Samsung-spezifische Optimierungen
-Für optimale Performance auf Samsung-Geräten:
+### Geräte-Optimierungen
+Für optimale Performance:
 1. App von Batterie-Optimierungen ausnehmen
 2. Sicherstellen dass App im Hintergrund laufen darf
 3. Einstellungen → Apps → XCam → Akku → Unbegrenzt
@@ -261,10 +261,8 @@ Bei Problemen oder Fragen:
 - E-Mail: martin.pfeffer@celox.io
 - Webseite: https://celox.io
 
-Entwickelt für Samsung Galaxy S24 mit Android 14.
-
 ---
 
-**Version:** 1.0
-**Build:** Debug/Release
+**Version:** 1.4
+**Unterstützt:** Android 13+ (API 33+) auf ARM64-Geräten
 **Datum:** 2025
