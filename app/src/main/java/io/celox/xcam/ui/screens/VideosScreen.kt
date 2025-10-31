@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.celox.xcam.data.model.VideoFile
 import io.celox.xcam.viewmodel.RecordingViewModel
+import io.celox.xcam.ui.icons.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,7 +37,7 @@ fun VideosScreen(
                 title = { Text("Recorded Videos") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Filled.ArrowBackCustom, "Back")
                     }
                 }
             )
@@ -74,7 +75,7 @@ private fun EmptyVideosContent(modifier: Modifier = Modifier) {
             modifier = Modifier.padding(24.dp)
         ) {
             Icon(
-                Icons.Default.VideoLibrary,
+                Icons.Filled.VideoLibraryCustom,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -112,7 +113,7 @@ private fun VideoItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                Icons.Default.VideoFile,
+                Icons.Filled.VideoFileCustom,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
                 tint = MaterialTheme.colorScheme.primary
@@ -143,7 +144,7 @@ private fun VideoItem(
 
             IconButton(onClick = { showDeleteDialog = true }) {
                 Icon(
-                    Icons.Default.Delete,
+                    Icons.Filled.DeleteCustom,
                     contentDescription = "Delete",
                     tint = MaterialTheme.colorScheme.error
                 )

@@ -3,7 +3,6 @@ package io.celox.xcam.ui.screens
 import androidx.camera.core.CameraSelector
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -11,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.celox.xcam.data.model.VideoQuality
 import io.celox.xcam.viewmodel.RecordingViewModel
+import io.celox.xcam.ui.icons.ArrowBackCustom
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +26,7 @@ fun SettingsScreen(
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
+                        Icon(Icons.Filled.ArrowBackCustom, "Back")
                     }
                 }
             )

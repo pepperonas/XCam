@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.celox.xcam.data.model.RecordingState
 import io.celox.xcam.viewmodel.RecordingViewModel
+import io.celox.xcam.ui.icons.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,10 +32,10 @@ fun MainScreen(
                 title = { Text("XCam") },
                 actions = {
                     IconButton(onClick = onNavigateToVideos) {
-                        Icon(Icons.Default.VideoLibrary, "Videos")
+                        Icon(Icons.Filled.VideoLibraryCustom, "Videos")
                     }
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, "Settings")
+                        Icon(Icons.Filled.SettingsCustom, "Settings")
                     }
                 }
             )
@@ -73,7 +74,7 @@ private fun PermissionRequiredContent(onRequestPermissions: () -> Unit) {
         modifier = Modifier.padding(24.dp)
     ) {
         Icon(
-            Icons.Default.Warning,
+            Icons.Filled.WarningCustom,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.error
@@ -113,7 +114,7 @@ private fun RecordingContent(
     ) {
         // Status indicator
         Icon(
-            if (isRecording) Icons.Default.FiberManualRecord else Icons.Default.Videocam,
+            if (isRecording) Icons.Filled.FiberManualRecordCustom else Icons.Filled.VideocamCustom,
             contentDescription = null,
             modifier = Modifier.size(120.dp),
             tint = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
@@ -155,7 +156,7 @@ private fun RecordingContent(
             )
         ) {
             Icon(
-                if (isRecording) Icons.Default.Stop else Icons.Default.PlayArrow,
+                if (isRecording) Icons.Filled.StopCustom else Icons.Filled.PlayArrowCustom,
                 contentDescription = null,
                 modifier = Modifier.size(24.dp)
             )

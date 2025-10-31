@@ -12,8 +12,8 @@ android {
         applicationId = "io.celox.xcam"
         minSdk = 33
         targetSdk = 34
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -78,9 +78,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    // Material Icons Extended needed for VideoLibrary, FiberManualRecord, VideoFile icons
-    // Consider custom icons in future to reduce size further
-    implementation("androidx.compose.material:material-icons-extended:1.5.4")
+    // Using custom vector icons instead of extended library (saves ~10-15 MB)
     implementation("androidx.navigation:navigation-compose:2.7.5")
 
     // CameraX (only required modules)
