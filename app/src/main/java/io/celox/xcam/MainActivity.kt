@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -73,6 +75,37 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Animation specs for navigation transitions
+private const val TRANSITION_DURATION = 300
+
+private val enterTransition: EnterTransition = fadeIn(
+    animationSpec = tween(TRANSITION_DURATION)
+) + slideInHorizontally(
+    animationSpec = tween(TRANSITION_DURATION),
+    initialOffsetX = { fullWidth -> fullWidth / 4 }
+)
+
+private val exitTransition: ExitTransition = fadeOut(
+    animationSpec = tween(TRANSITION_DURATION)
+) + slideOutHorizontally(
+    animationSpec = tween(TRANSITION_DURATION),
+    targetOffsetX = { fullWidth -> -fullWidth / 4 }
+)
+
+private val popEnterTransition: EnterTransition = fadeIn(
+    animationSpec = tween(TRANSITION_DURATION)
+) + slideInHorizontally(
+    animationSpec = tween(TRANSITION_DURATION),
+    initialOffsetX = { fullWidth -> -fullWidth / 4 }
+)
+
+private val popExitTransition: ExitTransition = fadeOut(
+    animationSpec = tween(TRANSITION_DURATION)
+) + slideOutHorizontally(
+    animationSpec = tween(TRANSITION_DURATION),
+    targetOffsetX = { fullWidth -> fullWidth / 4 }
+)
+
 @Composable
 fun XCamApp(
     hasPermissions: Boolean,
@@ -83,9 +116,19 @@ fun XCamApp(
 
     NavHost(
         navController = navController,
-        startDestination = "main"
+        startDestination = "main",
+        enterTransition = { enterTransition },
+        exitTransition = { exitTransition },
+        popEnterTransition = { popEnterTransition },
+        popExitTransition = { popExitTransition }
     ) {
-        composable("main") {
+        composable(
+            route = "main",
+            enterTransition = { fadeIn(animationSpec = tween(TRANSITION_DURATION)) },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { fadeOut(animationSpec = tween(TRANSITION_DURATION)) }
+        ) {
             MainScreen(
                 onNavigateToSettings = { navController.navigate("settings") },
                 onNavigateToVideos = { navController.navigate("videos") },
@@ -94,13 +137,25 @@ fun XCamApp(
                 viewModel = viewModel
             )
         }
-        composable("settings") {
+        composable(
+            route = "settings",
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
+        ) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() },
                 viewModel = viewModel
             )
         }
-        composable("videos") {
+        composable(
+            route = "videos",
+            enterTransition = { enterTransition },
+            exitTransition = { exitTransition },
+            popEnterTransition = { popEnterTransition },
+            popExitTransition = { popExitTransition }
+        ) {
             VideosScreen(
                 onNavigateBack = { navController.popBackStack() },
                 viewModel = viewModel
