@@ -18,11 +18,15 @@ Eine native Android-App für moderne Android-Geräte (Android 13+), die Videoauf
 - **Automatischer Stop:** Bei niedrigem Akku (<10%)
 
 ### UI Features
-- Material 3 Design mit Jetpack Compose
-- Übersichtliche Haupt-Ansicht mit Recording-Status
-- Einstellungs-Screen für Konfiguration
-- Video-Liste mit allen aufgenommenen Videos
-- Video-Verwaltung (Anzeigen, Löschen)
+- **Professionelles Dark & Red Theme** - Dunkles Design mit roten Akzenten
+- Material Design 3 mit Jetpack Compose
+- **Animierter Recording-Indikator** mit pulsierendem Glow-Effekt
+- **Smooth Navigation Transitions** zwischen allen Screens
+- **Haptic Feedback** bei allen Interaktionen
+- Übersichtliche Haupt-Ansicht mit animiertem Recording-Status
+- Einstellungs-Screen mit Material 3 SegmentedButtonRow
+- Video-Liste mit animierten List-Items
+- Video-Verwaltung mit verbessertem Delete-Dialog
 
 ## Technische Details
 
@@ -135,15 +139,22 @@ app/src/main/java/io/celox/xcam/
 ├── viewmodel/
 │   └── RecordingViewModel.kt     # Zentrale Business-Logik
 ├── ui/
+│   ├── components/
+│   │   └── Components.kt         # Wiederverwendbare UI-Komponenten
+│   ├── icons/
+│   │   └── CustomIcons.kt        # Custom Vector Icons
 │   ├── screens/
-│   │   ├── MainScreen.kt         # Haupt-Screen
-│   │   ├── SettingsScreen.kt     # Einstellungen
-│   │   └── VideosScreen.kt       # Video-Liste
-│   └── theme/                    # Material Theme
+│   │   ├── MainScreen.kt         # Haupt-Screen mit Animationen
+│   │   ├── SettingsScreen.kt     # Einstellungen mit SegmentedButtons
+│   │   └── VideosScreen.kt       # Animierte Video-Liste
+│   └── theme/
+│       ├── Color.kt              # Dark & Red Farbpalette
+│       ├── Theme.kt              # Material 3 Theme
+│       └── Type.kt               # Typography System
 ├── util/
 │   ├── Constants.kt              # App-Konstanten
 │   └── PermissionUtils.kt        # Permission-Helper
-└── MainActivity.kt               # Entry Point
+└── MainActivity.kt               # Entry Point mit Nav-Transitions
 ```
 
 ## Wichtige Hinweise
@@ -263,6 +274,6 @@ Bei Problemen oder Fragen:
 
 ---
 
-**Version:** 1.4
+**Version:** 1.7
 **Unterstützt:** Android 13+ (API 33+) auf ARM64-Geräten
 **Datum:** 2025
