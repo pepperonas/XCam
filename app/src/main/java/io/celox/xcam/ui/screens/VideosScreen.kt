@@ -3,9 +3,11 @@ package io.celox.xcam.ui.screens
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,19 +17,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.decode.VideoFrameDecoder
+import coil.request.ImageRequest
 import io.celox.xcam.data.model.VideoFile
 import io.celox.xcam.viewmodel.RecordingViewModel
 import io.celox.xcam.ui.icons.*
 import io.celox.xcam.ui.components.AnimatedIconButton
 import io.celox.xcam.ui.components.EmptyState
+import io.celox.xcam.ui.components.GlassmorphicCard
+import io.celox.xcam.ui.components.ShimmerEffect
 import io.celox.xcam.ui.theme.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -37,6 +46,7 @@ import java.util.*
 @Composable
 fun VideosScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToPlayer: (Int) -> Unit = {},
     viewModel: RecordingViewModel = viewModel()
 ) {
     val videos by viewModel.videoFiles.collectAsState()
@@ -65,7 +75,7 @@ fun VideosScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
@@ -115,6 +125,7 @@ fun VideosScreen(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 viewModel.deleteVideo(video)
                             },
+                            onClick = { onNavigateToPlayer(index) },
                             animationDelay = index * 50
                         )
                     }
@@ -133,6 +144,7 @@ fun VideosScreen(
 private fun AnimatedVideoItem(
     video: VideoFile,
     onDelete: () -> Unit,
+    onClick: () -> Unit,
     animationDelay: Int
 ) {
     var isVisible by remember { mutableStateOf(false) }
@@ -157,7 +169,8 @@ private fun AnimatedVideoItem(
             onDeleteClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 showDeleteDialog = true
-            }
+            },
+            onClick = onClick
         )
     }
 
@@ -176,43 +189,86 @@ private fun AnimatedVideoItem(
 @Composable
 private fun VideoItemCard(
     video: VideoFile,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = SurfaceGlass
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceGlassStroke)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Video thumbnail placeholder with gradient
+            // Video thumbnail with Coil
             Box(
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(80.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                            )
-                        )
-                    ),
+                    .background(DarkSurfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Filled.VideoFileCustom,
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(video.file)
+                        .decoderFactory(VideoFrameDecoder.Factory())
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Video thumbnail",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp))
                 )
+
+                // Play icon overlay
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(
+                            Color.Black.copy(alpha = 0.6f),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.PlayArrowCustom,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.White
+                    )
+                }
+
+                // Duration badge
+                if (video.duration > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(4.dp)
+                            .background(
+                                Color.Black.copy(alpha = 0.7f),
+                                RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = video.formattedDuration,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))

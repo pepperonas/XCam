@@ -18,13 +18,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.celox.xcam.data.model.VideoQuality
 import io.celox.xcam.viewmodel.RecordingViewModel
 import io.celox.xcam.ui.icons.ArrowBackCustom
 import io.celox.xcam.ui.icons.WarningCustom
+import io.celox.xcam.ui.icons.InfoCustom
 import io.celox.xcam.ui.components.AnimatedIconButton
+import io.celox.xcam.ui.components.GlassmorphicCard
+import io.celox.xcam.ui.theme.*
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +67,7 @@ fun SettingsScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
@@ -84,7 +88,14 @@ fun SettingsScreen(
                 enter = fadeIn(animationSpec = tween(300, delayMillis = 0)) +
                         slideInVertically(animationSpec = tween(300, delayMillis = 0)) { it / 4 }
             ) {
-                SettingsCard(title = "Camera") {
+                GlassmorphicCard {
+                    Text(
+                        "Camera",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     SingleChoiceSegmentedButtonRow(
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -130,7 +141,14 @@ fun SettingsScreen(
                 enter = fadeIn(animationSpec = tween(300, delayMillis = 100)) +
                         slideInVertically(animationSpec = tween(300, delayMillis = 100)) { it / 4 }
             ) {
-                SettingsCard(title = "Video Quality") {
+                GlassmorphicCard {
+                    Text(
+                        "Video Quality",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     SingleChoiceSegmentedButtonRow(
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -169,7 +187,14 @@ fun SettingsScreen(
                 enter = fadeIn(animationSpec = tween(300, delayMillis = 200)) +
                         slideInVertically(animationSpec = tween(300, delayMillis = 200)) { it / 4 }
             ) {
-                SettingsCard(title = "Audio") {
+                GlassmorphicCard {
+                    Text(
+                        "Audio",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     SettingToggleRow(
                         title = "Enable Audio Recording",
                         subtitle = "Record sound with video",
@@ -188,7 +213,14 @@ fun SettingsScreen(
                 enter = fadeIn(animationSpec = tween(300, delayMillis = 300)) +
                         slideInVertically(animationSpec = tween(300, delayMillis = 300)) { it / 4 }
             ) {
-                SettingsCard(title = "Battery Management") {
+                GlassmorphicCard {
+                    Text(
+                        "Battery Management",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     SettingToggleRow(
                         title = "Stop at Low Battery",
                         subtitle = "Automatically stop recording at 10%",
@@ -207,22 +239,14 @@ fun SettingsScreen(
                 enter = fadeIn(animationSpec = tween(300, delayMillis = 400)) +
                         slideInVertically(animationSpec = tween(300, delayMillis = 400)) { it / 4 }
             ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
-                ) {
+                GlassmorphicCard {
                     Row(
-                        modifier = Modifier.padding(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Icon(
                             Icons.Filled.WarningCustom,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
+                            tint = Amber60,
                             modifier = Modifier.size(24.dp)
                         )
                         Column {
@@ -230,7 +254,7 @@ fun SettingsScreen(
                                 "Legal Notice",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.error
+                                color = Amber60
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
@@ -245,35 +269,46 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-}
+            // About Section
+            AnimatedVisibility(
+                visible = showContent,
+                enter = fadeIn(animationSpec = tween(300, delayMillis = 500)) +
+                        slideInVertically(animationSpec = tween(300, delayMillis = 500)) { it / 4 }
+            ) {
+                GlassmorphicCard {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.InfoCustom,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Column {
+                            Text(
+                                "About XCam",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                "Version 2.0",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "Background Video Recorder",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
+            }
 
-@Composable
-private fun SettingsCard(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-            Text(
-                title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
-            )
             Spacer(modifier = Modifier.height(16.dp))
-            content()
         }
     }
 }

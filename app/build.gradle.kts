@@ -12,8 +12,8 @@ android {
         applicationId = "io.celox.xcam"
         minSdk = 33
         targetSdk = 34
-        versionCode = 8
-        versionName = "1.7"
+        versionCode = 9
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -80,6 +80,20 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     // Using custom vector icons instead of extended library (saves ~10-15 MB)
     implementation("androidx.navigation:navigation-compose:2.7.5")
+
+    // Splash Screen
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // Image loading with video thumbnail support
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-video:2.5.0")
+
+    // Media3 ExoPlayer for video playback
+    implementation("androidx.media3:media3-exoplayer:1.2.0")
+    implementation("androidx.media3:media3-ui:1.2.0")
+
+    // Compose Foundation (for HorizontalPager)
+    implementation("androidx.compose.foundation:foundation:1.6.0")
 
     // CameraX (only required modules)
     implementation("androidx.camera:camera-camera2:1.3.0")

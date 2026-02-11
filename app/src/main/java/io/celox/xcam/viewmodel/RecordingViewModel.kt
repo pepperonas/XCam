@@ -1,22 +1,30 @@
 package io.celox.xcam.viewmodel
 
 import android.app.Application
+import android.media.MediaMetadataRetriever
 import androidx.camera.core.CameraSelector
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.celox.xcam.data.PreferencesManager
 import io.celox.xcam.data.model.RecordingConfig
 import io.celox.xcam.data.model.RecordingState
 import io.celox.xcam.data.model.VideoFile
 import io.celox.xcam.data.model.VideoQuality
 import io.celox.xcam.service.RecordingService
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import android.os.Environment
 import java.io.File
 
 class RecordingViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val preferencesManager = PreferencesManager(application)
 
     private val _recordingState = MutableStateFlow<RecordingState>(RecordingState.Idle)
     val recordingState: StateFlow<RecordingState> = _recordingState.asStateFlow()
@@ -27,8 +35,17 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
     private val _videoFiles = MutableStateFlow<List<VideoFile>>(emptyList())
     val videoFiles: StateFlow<List<VideoFile>> = _videoFiles.asStateFlow()
 
+    val hasCompletedOnboarding: StateFlow<Boolean> = preferencesManager.hasCompletedOnboarding
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     init {
         loadVideoFiles()
+    }
+
+    fun completeOnboarding() {
+        viewModelScope.launch {
+            preferencesManager.setOnboardingCompleted()
+        }
     }
 
     fun startRecording() {
@@ -91,20 +108,37 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
                     return@launch
                 }
 
-                val files = xCamDir.listFiles()?.filter { it.extension == "mp4" }
-                    ?.map { file ->
-                        VideoFile(
-                            file = file,
-                            name = file.name,
-                            size = file.length(),
-                            timestamp = file.lastModified()
-                        )
-                    }?.sortedByDescending { it.timestamp } ?: emptyList()
+                val files = withContext(Dispatchers.IO) {
+                    xCamDir.listFiles()?.filter { it.extension == "mp4" }
+                        ?.map { file ->
+                            val duration = getVideoDuration(file)
+                            VideoFile(
+                                file = file,
+                                name = file.name,
+                                size = file.length(),
+                                duration = duration,
+                                timestamp = file.lastModified(),
+                                thumbnailPath = file.absolutePath
+                            )
+                        }?.sortedByDescending { it.timestamp } ?: emptyList()
+                }
 
                 _videoFiles.value = files
             } catch (e: Exception) {
                 _videoFiles.value = emptyList()
             }
+        }
+    }
+
+    private fun getVideoDuration(file: File): Long {
+        return try {
+            val retriever = MediaMetadataRetriever()
+            retriever.setDataSource(file.absolutePath)
+            val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+            retriever.release()
+            duration
+        } catch (e: Exception) {
+            0L
         }
     }
 

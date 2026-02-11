@@ -3,6 +3,7 @@ package io.celox.xcam.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -18,8 +19,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -36,7 +41,7 @@ import io.celox.xcam.ui.theme.*
 
 /**
  * Animated Recording Indicator
- * Displays a pulsing red dot with glow effect when recording
+ * Displays a pulsing amber dot with glow effect and rotating arc when recording
  */
 @Composable
 fun AnimatedRecordingIndicator(
@@ -49,9 +54,12 @@ fun AnimatedRecordingIndicator(
     // Pulse animation for scale
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (isRecording) 1.15f else 1f,
+        targetValue = if (isRecording) 1.15f else 1.03f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = EaseInOutCubic),
+            animation = tween(
+                durationMillis = if (isRecording) 800 else 2000,
+                easing = EaseInOutCubic
+            ),
             repeatMode = RepeatMode.Reverse
         ),
         label = "scale_animation"
@@ -68,9 +76,20 @@ fun AnimatedRecordingIndicator(
         label = "glow_animation"
     )
 
+    // Rotating arc angle
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotation_animation"
+    )
+
     // Color transition
     val iconColor by animateColorAsState(
-        targetValue = if (isRecording) RecordingRed else MaterialTheme.colorScheme.primary,
+        targetValue = if (isRecording) RecordingAmber else MaterialTheme.colorScheme.primary,
         animationSpec = tween(300),
         label = "color_animation"
     )
@@ -79,22 +98,49 @@ fun AnimatedRecordingIndicator(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // Glow effect (only when recording)
+        // Glow effect
+        Box(
+            modifier = Modifier
+                .size(size * 1.3f)
+                .scale(scale)
+                .drawBehind {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = if (isRecording) listOf(
+                                RecordingAmber.copy(alpha = glowAlpha * 0.5f),
+                                RecordingAmber.copy(alpha = glowAlpha * 0.2f),
+                                Color.Transparent
+                            ) else listOf(
+                                Amber40.copy(alpha = 0.1f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+                }
+        )
+
+        // Rotating gradient arc when recording
         if (isRecording) {
             Box(
                 modifier = Modifier
-                    .size(size * 1.3f)
-                    .scale(scale)
+                    .size(size * 1.1f)
                     .drawBehind {
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    RecordingRed.copy(alpha = glowAlpha * 0.5f),
-                                    RecordingRed.copy(alpha = glowAlpha * 0.2f),
-                                    Color.Transparent
-                                )
+                        rotate(rotation) {
+                            drawArc(
+                                brush = Brush.sweepGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        RecordingAmber.copy(alpha = 0.6f),
+                                        RecordingAmber,
+                                        Color.Transparent
+                                    )
+                                ),
+                                startAngle = 0f,
+                                sweepAngle = 120f,
+                                useCenter = false,
+                                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
                             )
-                        )
+                        }
                     }
             )
         }
@@ -105,7 +151,7 @@ fun AnimatedRecordingIndicator(
             contentDescription = if (isRecording) "Recording" else "Ready",
             modifier = Modifier
                 .size(size)
-                .scale(if (isRecording) scale else 1f),
+                .scale(if (isRecording) scale else scale),
             tint = iconColor
         )
     }
@@ -138,7 +184,7 @@ fun AnimatedRecordButton(
 
     // Background color transition
     val containerColor by animateColorAsState(
-        targetValue = if (isRecording) RecordingRed else MaterialTheme.colorScheme.primary,
+        targetValue = if (isRecording) RecordingAmber else MaterialTheme.colorScheme.primary,
         animationSpec = tween(300),
         label = "button_color"
     )
@@ -150,7 +196,7 @@ fun AnimatedRecordButton(
         },
         modifier = modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(72.dp)
             .scale(scale),
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
@@ -159,7 +205,7 @@ fun AnimatedRecordButton(
         ),
         shape = RoundedCornerShape(16.dp),
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 6.dp,
+            defaultElevation = 8.dp,
             pressedElevation = 2.dp
         ),
         interactionSource = interactionSource
@@ -184,19 +230,15 @@ fun AnimatedRecordButton(
 }
 
 /**
- * Gradient Card
- * Card with subtle gradient background and elevation
+ * Glassmorphic Card
+ * Card with semi-transparent background and subtle border for glass effect
  */
 @Composable
-fun GradientCard(
+fun GlassmorphicCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val cardColors = CardDefaults.cardColors(
-        containerColor = MaterialTheme.colorScheme.surfaceVariant
-    )
-
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -207,9 +249,12 @@ fun GradientCard(
                     Modifier
                 }
             ),
-        colors = cardColors,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceGlass
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, SurfaceGlassStroke)
     ) {
         Column(
             modifier = Modifier
@@ -217,8 +262,8 @@ fun GradientCard(
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.surfaceVariant,
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+                            SurfaceGlass,
+                            Color.Transparent
                         )
                     )
                 )
@@ -226,6 +271,23 @@ fun GradientCard(
             content = content
         )
     }
+}
+
+/**
+ * Gradient Card
+ * Card with subtle gradient background and elevation
+ */
+@Composable
+fun GradientCard(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    GlassmorphicCard(
+        modifier = modifier,
+        onClick = onClick,
+        content = content
+    )
 }
 
 /**
@@ -251,7 +313,7 @@ fun StatusChip(
     )
 
     val backgroundColor by animateColorAsState(
-        targetValue = if (isActive) RecordingRed else MaterialTheme.colorScheme.primaryContainer,
+        targetValue = if (isActive) RecordingAmber else MaterialTheme.colorScheme.primaryContainer,
         animationSpec = tween(300),
         label = "chip_bg_color"
     )
@@ -408,4 +470,38 @@ fun ConfigDisplayRow(
             color = MaterialTheme.colorScheme.onSurface
         )
     }
+}
+
+/**
+ * Shimmer Effect for loading states
+ */
+@Composable
+fun ShimmerEffect(
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
+    val offset by infiniteTransition.animateFloat(
+        initialValue = -1f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "shimmer_offset"
+    )
+
+    Box(
+        modifier = modifier
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        DarkSurfaceVariant,
+                        DarkSurfaceHigh,
+                        DarkSurfaceVariant,
+                    ),
+                    start = Offset(offset * 300f, 0f),
+                    end = Offset((offset + 1f) * 300f, 0f)
+                )
+            )
+    )
 }

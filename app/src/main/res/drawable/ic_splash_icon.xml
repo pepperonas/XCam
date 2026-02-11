@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Stylized eye/camera lens icon in amber -->
+    <!-- Outer eye shape -->
+    <path
+        android:fillColor="#FFFF9100"
+        android:pathData="M54,34 C38,34 24,44 18,54 C24,64 38,74 54,74 C70,74 84,64 90,54 C84,44 70,34 54,34 Z" />
+    <!-- Inner circle (iris) -->
+    <path
+        android:fillColor="#FF0A0A0A"
+        android:pathData="M54,42 C47.37,42 42,47.37 42,54 C42,60.63 47.37,66 54,66 C60.63,66 66,60.63 66,54 C66,47.37 60.63,42 54,42 Z" />
+    <!-- Pupil -->
+    <path
+        android:fillColor="#FFFF9100"
+        android:pathData="M54,48 C50.69,48 48,50.69 48,54 C48,57.31 50.69,60 54,60 C57.31,60 60,57.31 60,54 C60,50.69 57.31,48 54,48 Z" />
+    <!-- Light reflection -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M51,50 C49.9,50 49,50.9 49,52 C49,53.1 49.9,54 51,54 C52.1,54 53,53.1 53,52 C53,50.9 52.1,50 51,50 Z" />
+</vector>

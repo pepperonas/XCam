@@ -18,19 +18,19 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 
 // =============================================================================
-// XCam Professional Dark & Red Theme
+// XCam Professional Dark & Amber Theme
 // =============================================================================
 
 /**
  * Custom Dark Color Scheme - Primary theme for XCam
- * Features: Red primary color on dark surfaces
+ * Features: Amber/Orange primary color on dark surfaces
  */
 private val XCamDarkColorScheme = darkColorScheme(
     // Primary colors
-    primary = Red40,
-    onPrimary = OnRed,
-    primaryContainer = Red30,
-    onPrimaryContainer = Red80,
+    primary = Amber40,
+    onPrimary = Color.White,
+    primaryContainer = Amber30,
+    onPrimaryContainer = Amber80,
 
     // Secondary colors
     secondary = Gray60,
@@ -39,10 +39,10 @@ private val XCamDarkColorScheme = darkColorScheme(
     onSecondaryContainer = Gray80,
 
     // Tertiary colors
-    tertiary = RecordingRed,
-    onTertiary = OnRed,
-    tertiaryContainer = Red20,
-    onTertiaryContainer = Red80,
+    tertiary = RecordingAmber,
+    onTertiary = Color.Black,
+    tertiaryContainer = Amber20,
+    onTertiaryContainer = Amber80,
 
     // Background & Surface
     background = DarkBackground,
@@ -55,34 +55,34 @@ private val XCamDarkColorScheme = darkColorScheme(
     // Other semantic colors
     error = ErrorRed,
     onError = Color.Black,
-    errorContainer = Red30,
-    onErrorContainer = Red80,
+    errorContainer = Amber30,
+    onErrorContainer = Amber80,
 
     outline = Gray40,
     outlineVariant = Gray20,
     inverseSurface = Gray90,
     inverseOnSurface = DarkSurface,
-    inversePrimary = Red30,
+    inversePrimary = Amber30,
 
-    surfaceTint = Red40
+    surfaceTint = Amber40
 )
 
 /**
  * Light Color Scheme - For users who prefer light mode
  */
 private val XCamLightColorScheme = lightColorScheme(
-    primary = Red40,
-    onPrimary = OnRed,
-    primaryContainer = Red80,
-    onPrimaryContainer = Red20,
+    primary = Amber40,
+    onPrimary = Color.White,
+    primaryContainer = Amber80,
+    onPrimaryContainer = Amber20,
 
     secondary = Gray60,
     onSecondary = Color.White,
     secondaryContainer = Gray80,
     onSecondaryContainer = Gray20,
 
-    tertiary = RecordingRed,
-    onTertiary = OnRed,
+    tertiary = RecordingAmber,
+    onTertiary = Color.Black,
 
     background = Color(0xFFFFFBFE),
     onBackground = Color(0xFF1C1B1F),
@@ -113,7 +113,7 @@ val XCamShapes = Shapes(
 fun XCamTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    // Set to false to always use our custom red theme
+    // Set to false to always use our custom amber theme
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {

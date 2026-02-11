@@ -2,22 +2,30 @@ package io.celox.xcam.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.celox.xcam.data.model.RecordingState
 import io.celox.xcam.viewmodel.RecordingViewModel
 import io.celox.xcam.ui.icons.*
 import io.celox.xcam.ui.components.*
-import io.celox.xcam.ui.theme.RecordingRed
+import io.celox.xcam.ui.theme.*
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +50,7 @@ fun MainScreen(
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = Color.Transparent,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 actions = {
@@ -63,46 +71,66 @@ fun MainScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.weight(0.15f))
-
-            AnimatedContent(
-                targetState = hasPermissions,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(300)) togetherWith
-                            fadeOut(animationSpec = tween(300))
-                },
-                label = "permission_content"
-            ) { hasPerms ->
-                if (!hasPerms) {
-                    PermissionRequiredContent(onRequestPermissions)
-                } else {
-                    RecordingContent(
-                        recordingState = recordingState,
-                        onStartRecording = { viewModel.startRecording() },
-                        onStopRecording = { viewModel.stopRecording() }
+            // Subtle ambient gradient background
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Amber40.copy(alpha = 0.03f),
+                                Color.Transparent
+                            ),
+                            radius = 800f
+                        )
                     )
-                }
-            }
+            )
 
-            Spacer(modifier = Modifier.weight(0.1f))
-
-            // Recording configuration info with animation
-            AnimatedVisibility(
-                visible = hasPermissions,
-                enter = fadeIn() + slideInVertically { it / 2 },
-                exit = fadeOut() + slideOutVertically { it / 2 }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                ConfigurationCard(recordingConfig)
-            }
+                Spacer(modifier = Modifier.weight(0.15f))
 
-            Spacer(modifier = Modifier.height(32.dp))
+                AnimatedContent(
+                    targetState = hasPermissions,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(300)) togetherWith
+                                fadeOut(animationSpec = tween(300))
+                    },
+                    label = "permission_content"
+                ) { hasPerms ->
+                    if (!hasPerms) {
+                        PermissionRequiredContent(onRequestPermissions)
+                    } else {
+                        RecordingContent(
+                            recordingState = recordingState,
+                            onStartRecording = { viewModel.startRecording() },
+                            onStopRecording = { viewModel.stopRecording() }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(0.1f))
+
+                // Recording configuration info with animation
+                AnimatedVisibility(
+                    visible = hasPermissions,
+                    enter = fadeIn() + slideInVertically { it / 2 },
+                    exit = fadeOut() + slideOutVertically { it / 2 }
+                ) {
+                    ConfigurationCard(recordingConfig)
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+            }
         }
     }
 }
@@ -154,13 +182,71 @@ private fun RecordingContent(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Animated status indicator
-        AnimatedRecordingIndicator(
-            isRecording = isRecording,
-            size = 140.dp
-        )
+        // Concentric ring background + animated recording indicator
+        Box(contentAlignment = Alignment.Center) {
+            // Outer ring
+            Box(
+                modifier = Modifier
+                    .size(180.dp)
+                    .drawBehind {
+                        drawCircle(
+                            color = if (isRecording) RecordingAmber.copy(alpha = 0.05f)
+                            else Amber40.copy(alpha = 0.03f),
+                            radius = size.minDimension / 2
+                        )
+                    }
+            )
+            // Inner ring
+            Box(
+                modifier = Modifier
+                    .size(160.dp)
+                    .drawBehind {
+                        drawCircle(
+                            color = if (isRecording) RecordingAmber.copy(alpha = 0.08f)
+                            else Amber40.copy(alpha = 0.05f),
+                            radius = size.minDimension / 2
+                        )
+                    }
+            )
+            AnimatedRecordingIndicator(
+                isRecording = isRecording,
+                size = 140.dp
+            )
+        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Elapsed time display when recording
+        AnimatedVisibility(
+            visible = isRecording,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            val startTime = (recordingState as? RecordingState.Recording)?.startTime ?: 0L
+            var elapsed by remember { mutableLongStateOf(0L) }
+
+            LaunchedEffect(startTime) {
+                while (true) {
+                    elapsed = System.currentTimeMillis() - startTime
+                    kotlinx.coroutines.delay(1000)
+                }
+            }
+
+            val minutes = TimeUnit.MILLISECONDS.toMinutes(elapsed)
+            val seconds = TimeUnit.MILLISECONDS.toSeconds(elapsed) % 60
+
+            Text(
+                text = String.format("%02d:%02d", minutes, seconds),
+                style = MaterialTheme.typography.displaySmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 4.sp
+                ),
+                fontWeight = FontWeight.Bold,
+                color = RecordingAmber
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Status chip
         AnimatedContent(
@@ -238,7 +324,7 @@ private fun RecordingContent(
 
 @Composable
 private fun ConfigurationCard(config: io.celox.xcam.data.model.RecordingConfig) {
-    GradientCard {
+    GlassmorphicCard {
         Text(
             "Current Configuration",
             style = MaterialTheme.typography.titleMedium,

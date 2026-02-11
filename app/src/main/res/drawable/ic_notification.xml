@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Eye shape outline -->
+    <path
+        android:pathData="M12,4.5 C7,4.5 2.7,7.6 1,12 C2.7,16.4 7,19.5 12,19.5 C17,19.5 21.3,16.4 23,12 C21.3,7.6 17,4.5 12,4.5 Z M12,17 C9.2,17 7,14.8 7,12 C7,9.2 9.2,7 12,7 C14.8,7 17,9.2 17,12 C17,14.8 14.8,17 12,17 Z"
+        android:fillColor="#FFFFFF" />
+
+    <!-- Pupil -->
+    <path
+        android:pathData="M12,9 C10.3,9 9,10.3 9,12 C9,13.7 10.3,15 12,15 C13.7,15 15,13.7 15,12 C15,10.3 13.7,9 12,9 Z"
+        android:fillColor="#FFFFFF" />
+
+    <!-- Small shield at bottom -->
+    <path
+        android:pathData="M12,17.5 L10.5,19 L10.5,21 C10.5,21 11.2,22 12,22.5 C12.8,22 13.5,21 13.5,21 L13.5,19 Z"
+        android:fillColor="#FFFFFF" />
+
+</vector>

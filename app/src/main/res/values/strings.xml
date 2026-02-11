@@ -1,3 +1,62 @@
 <resources>
     <string name="app_name">XCam</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Welcome to XCam</string>
+    <string name="onboarding_welcome_subtitle">Background Video Recorder</string>
+    <string name="onboarding_welcome_description">Record video with the screen off. Stealth recording for security and peace of mind.</string>
+    <string name="onboarding_camera_title">Camera Access</string>
+    <string name="onboarding_camera_description">XCam needs camera access to record video in the background.</string>
+    <string name="onboarding_audio_title">Audio &amp; Notifications</string>
+    <string name="onboarding_audio_description">Enable audio recording and notifications to stay informed during background recording.</string>
+    <string name="onboarding_ready_title">You\'re All Set</string>
+    <string name="onboarding_ready_description">XCam is ready to record. Start a recording and lock your screen — XCam keeps recording.</string>
+    <string name="onboarding_grant_permission">Grant Permission</string>
+    <string name="onboarding_permission_granted">Permission Granted</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+
+    <!-- Main Screen -->
+    <string name="main_ready">Ready to Record</string>
+    <string name="main_recording">Recording</string>
+    <string name="main_start_recording">Start Recording</string>
+    <string name="main_stop_recording">Stop Recording</string>
+    <string name="main_permissions_required">Permissions Required</string>
+    <string name="main_grant_permissions">Grant Permissions</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_camera">Camera</string>
+    <string name="settings_camera_back">Back</string>
+    <string name="settings_camera_front">Front</string>
+    <string name="settings_quality">Video Quality</string>
+    <string name="settings_audio">Audio Recording</string>
+    <string name="settings_max_duration">Max Duration</string>
+    <string name="settings_low_battery">Stop at Low Battery</string>
+    <string name="settings_legal_title">Legal Notice</string>
+    <string name="settings_legal_text">Recording without consent may violate local laws. You are solely responsible for compliance with applicable regulations.</string>
+    <string name="settings_about_title">About XCam</string>
+    <string name="settings_about_description">Background video recorder for Android. Record with the screen off for security and monitoring.</string>
+
+    <!-- Videos -->
+    <string name="videos_title">Recordings</string>
+    <string name="videos_empty">No recordings yet</string>
+    <string name="videos_empty_description">Your recordings will appear here</string>
+    <string name="videos_delete">Delete</string>
+    <string name="videos_share">Share</string>
+
+    <!-- Video Player -->
+    <string name="player_back">Back</string>
+    <string name="player_play">Play</string>
+    <string name="player_pause">Pause</string>
+    <string name="player_share">Share</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">Recording</string>
+    <string name="notification_recording">Recording in progress</string>
+    <string name="notification_stop">Stop</string>
+
+    <!-- General -->
+    <string name="all_permissions_granted">All permissions granted</string>
 </resources>
