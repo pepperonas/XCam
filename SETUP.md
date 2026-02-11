@@ -5,7 +5,7 @@
 ### 1. Projekt in Android Studio öffnen
 
 ```bash
-cd /Users/martin/AndroidStudioProjects/XCam
+cd /path/to/XCam
 ```
 
 Öffne das Projekt in Android Studio:
@@ -29,7 +29,7 @@ In Android Studio:
 ### 4. Gerät verbinden
 
 **Option A: Physisches Gerät (empfohlen)**
-1. USB-Debugging auf dem Samsung S24 aktivieren:
+1. USB-Debugging auf dem Gerät aktivieren:
    - Einstellungen → Über das Telefon → Software-Informationen
    - 7x auf "Build-Nummer" tippen
    - Zurück → Entwickleroptionen → USB-Debugging aktivieren
@@ -56,7 +56,10 @@ In Android Studio:
 # Debug Build + Installation
 ./gradlew installDebug
 
-# Release Build (signiert)
+# Optimierter Build mit Debug-Signatur (minifiziert mit R8)
+./gradlew assembleReleaseDebug
+
+# Release Build (benötigt Signing Config)
 ./gradlew assembleRelease
 ```
 
@@ -73,15 +76,17 @@ In Android Studio:
 ## Erste Verwendung auf dem Gerät
 
 ### 1. App öffnen
-- XCam-Icon im App-Drawer antippen
+- XCam-Icon (Stealth-Eye) im App-Drawer antippen
+- Splash Screen wird kurz angezeigt
 
-### 2. Berechtigungen gewähren
-Die App fordert folgende Berechtigungen an:
-- ✅ Kamera
-- ✅ Mikrofon
-- ✅ Benachrichtigungen
+### 2. Onboarding durchlaufen
+Beim ersten Start erscheint ein 4-seitiges Onboarding:
+1. **Willkommen** — App-Beschreibung
+2. **Kamera** — Kamera-Berechtigung gewähren
+3. **Audio & Notifications** — Mikrofon- und Benachrichtigungs-Berechtigung gewähren
+4. **Fertig** — "Get Started" drücken
 
-Alle müssen erlaubt werden für volle Funktionalität.
+Alle Berechtigungen müssen erlaubt werden für volle Funktionalität.
 
 ### 3. Batterie-Optimierung deaktivieren (wichtig!)
 Für zuverlässige Background-Aufnahmen:
@@ -102,25 +107,36 @@ Für zuverlässige Background-Aufnahmen:
 4. Display einschalten
 5. Notification-Drawer öffnen → "Stop" drücken
 6. Video-Icon in der App → Aufnahme sollte sichtbar sein
+7. Thumbnail antippen → Video im Player ansehen
+
+## Release erstellen und auf GitHub veröffentlichen
+
+Der GitHub Actions Workflow baut automatisch ein APK und erstellt ein Release, wenn ein Git-Tag gepusht wird:
+
+```bash
+# Version in app/build.gradle.kts anpassen (versionCode + versionName)
+
+# Tag erstellen und pushen
+git tag -a v2.1 -m "v2.1 - Beschreibung der Änderungen"
+git push origin v2.1
+```
+
+Das APK (`XCam-{version}-arm64-v8a.apk`) ist dann auf der [Releases-Seite](https://github.com/pepperonas/XCam/releases) zum Download verfügbar.
 
 ## Troubleshooting
 
 ### "Gradle Sync Failed"
 ```bash
-# Terminal öffnen im Projekt-Verzeichnis
 ./gradlew --refresh-dependencies
 ```
 
 ### "SDK Platform 34 not found"
-- Tools → SDK Manager
-- SDK Platforms → Android 14.0 (API 34) installieren
-- Apply → OK
-- Gradle Sync wiederholen
+- Tools → SDK Manager → SDK Platforms → Android 14.0 (API 34) installieren → Gradle Sync wiederholen
 
 ### App startet nicht auf Gerät
 - USB-Debugging aktiviert?
 - Gerät in Android Studio sichtbar? (Select Device Dropdown)
-- `adb devices` im Terminal ausführen → Gerät sollte listed sein
+- `adb devices` im Terminal → Gerät sollte gelistet sein
 
 ### Build Error: "Unresolved reference"
 - Build → Clean Project
@@ -128,44 +144,28 @@ Für zuverlässige Background-Aufnahmen:
 - File → Invalidate Caches / Restart
 
 ### Recording funktioniert nicht
-1. Berechtigungen überprüfen:
-   - Einstellungen → Apps → XCam → Berechtigungen
-   - Kamera, Mikrofon, Benachrichtigungen sollten erlaubt sein
-
-2. Batterie-Optimierung:
-   - Muss auf "Unbegrenzt" stehen
-
-3. App-Logs überprüfen:
+1. Berechtigungen überprüfen: Einstellungen → Apps → XCam → Berechtigungen
+2. Batterie-Optimierung auf "Unbegrenzt" stellen
+3. App-Logs prüfen:
    ```bash
    adb logcat | grep XCam
    ```
 
-### Video-Dateien nicht sichtbar
-- Einstellungen → Apps → XCam → Berechtigungen
-- Dateien und Medien → Erlauben
-- Geräte-Gallerie öffnen → Alben → XCam
+### Onboarding erneut anzeigen
+- App-Daten löschen: Einstellungen → Apps → XCam → Speicher → Daten löschen
 
 ## Build-Varianten
 
-### Debug Build
-- Standard für Entwicklung
-- Debuggbar
-- Größer (enthält Debug-Symbole)
+| Variante | Beschreibung | Befehl |
+|----------|-------------|--------|
+| **debug** | Standard für Entwicklung, debuggbar | `./gradlew assembleDebug` |
+| **releaseDebug** | Minifiziert mit R8, Debug-Signatur | `./gradlew assembleReleaseDebug` |
+| **release** | Minifiziert mit R8, benötigt Signing Key | `./gradlew assembleRelease` |
 
-```bash
-./gradlew assembleDebug
-# APK: app/build/outputs/apk/debug/app-debug.apk
-```
-
-### Release Build
-- Optimiert für Produktion
-- Kleiner und schneller
-- Benötigt Signing Key
-
-```bash
-./gradlew assembleRelease
-# APK: app/build/outputs/apk/release/app-release.apk
-```
+APK-Ausgabepfade:
+- Debug: `app/build/outputs/apk/debug/`
+- ReleaseDebug: `app/build/outputs/apk/releaseDebug/`
+- Release: `app/build/outputs/apk/release/`
 
 ## Signing Key erstellen (für Release Build)
 
@@ -175,7 +175,7 @@ keytool -genkey -v -keystore xcam-release-key.jks \
   -alias xcam
 ```
 
-In `app/build.gradle.kts` signing config hinzufügen:
+In `app/build.gradle.kts` Signing Config hinzufügen:
 
 ```kotlin
 android {
@@ -190,10 +190,38 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            // ...
         }
     }
 }
+```
+
+## Nützliche ADB-Befehle
+
+```bash
+# App installieren
+adb install app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
+
+# App deinstallieren
+adb uninstall io.celox.xcam
+
+# App starten
+adb shell am start -n io.celox.xcam/.MainActivity
+
+# App stoppen
+adb shell am force-stop io.celox.xcam
+
+# Berechtigungen gewähren (ohne UI)
+adb shell pm grant io.celox.xcam android.permission.CAMERA
+adb shell pm grant io.celox.xcam android.permission.RECORD_AUDIO
+
+# App-Daten löschen (Onboarding wird erneut angezeigt)
+adb shell pm clear io.celox.xcam
+
+# Aufgenommene Videos auflisten
+adb shell ls -la /sdcard/Movies/XCam/
+
+# Video vom Gerät ziehen
+adb pull /sdcard/Movies/XCam/VID_20250101_120000.mp4 .
 ```
 
 ## Logcat filtern
@@ -212,38 +240,8 @@ adb logcat | grep "io.celox.xcam"
 adb logcat *:E *:W
 ```
 
-## Nützliche ADB-Befehle
+## Performance-Optimierung für Builds
 
-```bash
-# App installieren
-adb install app/build/outputs/apk/debug/app-debug.apk
-
-# App deinstallieren
-adb uninstall io.celox.xcam
-
-# App starten
-adb shell am start -n io.celox.xcam/.MainActivity
-
-# App stoppen
-adb shell am force-stop io.celox.xcam
-
-# Berechtigungen gewähren (ohne UI)
-adb shell pm grant io.celox.xcam android.permission.CAMERA
-adb shell pm grant io.celox.xcam android.permission.RECORD_AUDIO
-
-# App-Daten löschen
-adb shell pm clear io.celox.xcam
-
-# Aufgenommene Videos auflisten
-adb shell ls -la /sdcard/Movies/XCam/
-
-# Video vom Gerät ziehen
-adb pull /sdcard/Movies/XCam/VID_20240101_120000.mp4 .
-```
-
-## Performance-Optimierung
-
-### Für schnellere Builds
 In `gradle.properties`:
 ```properties
 org.gradle.jvmargs=-Xmx4096m
@@ -252,102 +250,10 @@ org.gradle.caching=true
 kotlin.incremental=true
 ```
 
-### Build-Cache leeren (bei Problemen)
+Build-Cache leeren (bei Problemen):
 ```bash
 ./gradlew clean
-rm -rf ~/.gradle/caches/
 ```
-
-## Entwicklungs-Workflow
-
-### 1. Feature entwickeln
-```bash
-git checkout -b feature/neue-funktion
-# Code schreiben...
-```
-
-### 2. Testen
-```bash
-./gradlew test
-./gradlew connectedAndroidTest
-```
-
-### 3. App auf Gerät testen
-```bash
-./gradlew installDebug
-# Manuell auf Gerät testen
-```
-
-### 4. Build prüfen
-```bash
-./gradlew build
-```
-
-### 5. Commit und Push
-```bash
-git add .
-git commit -m "Add neue Funktion"
-git push origin feature/neue-funktion
-```
-
-## Produktions-Deployment
-
-### 1. Version erhöhen
-In `app/build.gradle.kts`:
-```kotlin
-defaultConfig {
-    versionCode = 2  // Erhöhen
-    versionName = "1.1"  // Erhöhen
-}
-```
-
-### 2. Release Build erstellen
-```bash
-./gradlew assembleRelease
-```
-
-### 3. APK signieren und optimieren
-```bash
-# Bereits signiert durch signingConfig
-# APK liegt in: app/build/outputs/apk/release/app-release.apk
-```
-
-### 4. Auf Google Play hochladen
-- Play Console → XCam → Releases → Production
-- APK hochladen
-- Release Notes hinzufügen
-- Review & Release
-
-## Support-Informationen
-
-### System-Info ausgeben
-```bash
-adb shell getprop ro.build.version.release  # Android Version
-adb shell getprop ro.product.model          # Gerätemodell
-adb shell getprop ro.build.version.sdk      # SDK Version
-```
-
-### App-Info
-```bash
-adb shell dumpsys package io.celox.xcam | grep version
-```
-
-## Häufige Fehler
-
-### OutOfMemoryError beim Build
-→ `gradle.properties`: Heap Size erhöhen auf 4096m oder mehr
-
-### "Execution failed for task ':app:mergeDebugResources'"
-→ Clean Project + Rebuild
-
-### "Android SDK not found"
-→ SDK-Pfad in `local.properties` setzen:
-```
-sdk.dir=/Users/martin/Library/Android/sdk
-```
-
-### CameraX Initialization Failed
-→ Berechtigungen prüfen + App neu starten
 
 ---
 

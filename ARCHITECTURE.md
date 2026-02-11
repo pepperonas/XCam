@@ -2,61 +2,100 @@
 
 ## Übersicht
 
-XCam verwendet eine moderne Android-Architektur mit MVVM-Pattern, Jetpack Compose für die UI und CameraX für die Kamera-Funktionalität.
+XCam verwendet eine moderne Android-Architektur mit MVVM-Pattern, Jetpack Compose für die UI, CameraX für die Kamera und Media3 ExoPlayer für die Video-Wiedergabe.
 
 ```
-┌─────────────────────────────────────────┐
-│           UI Layer (Compose)            │
-│  ┌──────────┐  ┌──────────┐  ┌────────┐│
-│  │  Main    │  │Settings  │  │ Videos ││
-│  │  Screen  │  │  Screen  │  │ Screen ││
-│  └──────────┘  └──────────┘  └────────┘│
-└─────────────────┬───────────────────────┘
-                  │
-┌─────────────────▼───────────────────────┐
-│         ViewModel Layer                 │
-│      ┌─────────────────────┐            │
-│      │ RecordingViewModel  │            │
-│      └─────────────────────┘            │
-└─────────────────┬───────────────────────┘
-                  │
-┌─────────────────▼───────────────────────┐
-│         Service Layer                   │
-│      ┌─────────────────────┐            │
-│      │  RecordingService   │            │
-│      └─────────────────────┘            │
-└─────────────────┬───────────────────────┘
-                  │
-┌─────────────────▼───────────────────────┐
-│         Data Layer                      │
-│  ┌────────────┐  ┌──────────────────┐   │
-│  │   Models   │  │  MediaStore API  │   │
-│  └────────────┘  └──────────────────┘   │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                 UI Layer (Compose)                        │
+│  ┌───────────┐ ┌──────┐ ┌────────┐ ┌──────┐ ┌────────┐ │
+│  │Onboarding │ │ Main │ │Settings│ │Videos│ │ Player │ │
+│  │  Screen   │ │Screen│ │ Screen │ │Screen│ │ Screen │ │
+│  └───────────┘ └──────┘ └────────┘ └──────┘ └────────┘ │
+└───────────────────────┬──────────────────────────────────┘
+                        │
+┌───────────────────────▼──────────────────────────────────┐
+│                ViewModel Layer                            │
+│             ┌─────────────────────┐                      │
+│             │ RecordingViewModel  │                      │
+│             └─────────────────────┘                      │
+└──────────┬────────────────────────────┬──────────────────┘
+           │                            │
+┌──────────▼──────────┐  ┌─────────────▼──────────────────┐
+│   Service Layer     │  │       Data Layer                │
+│ ┌─────────────────┐ │  │ ┌──────────────┐ ┌───────────┐ │
+│ │RecordingService │ │  │ │Preferences   │ │  Models   │ │
+│ └─────────────────┘ │  │ │  Manager     │ │           │ │
+│ ┌─────────────────┐ │  │ └──────────────┘ └───────────┘ │
+│ │ ActionReceiver  │ │  │ ┌──────────────┐               │
+│ └─────────────────┘ │  │ │MediaStore API│               │
+└─────────────────────┘  │ └──────────────┘               │
+                         └────────────────────────────────┘
 ```
+
+## Navigation
+
+```
+                    ┌─────────────┐
+                    │   Splash    │
+                    │   Screen    │
+                    └──────┬──────┘
+                           │
+              hasOnboarding?│
+              ┌─────────No─┤─Yes──────┐
+              ▼                       ▼
+     ┌────────────────┐       ┌──────────┐
+     │  Onboarding    │       │   Main   │◄───┐
+     │  (4 Pages)     │──────►│  Screen  │    │
+     └────────────────┘       └────┬─────┘    │
+                                   │          │
+                    ┌──────────────┼──────┐   │
+                    ▼              ▼       │   │
+            ┌──────────┐   ┌──────────┐  │   │
+            │ Settings │   │  Videos  │  │   │
+            │  Screen  │   │  Screen  │  │   │
+            └──────────┘   └────┬─────┘  │   │
+                                │        │   │
+                                ▼        │   │
+                         ┌──────────┐    │   │
+                         │  Video   │    │   │
+                         │  Player  │────┘   │
+                         └──────────┘        │
+                                             │
+                         Alle Screens ───────┘
+                         (popBackStack)
+```
+
+**Routen:** `"onboarding"`, `"main"`, `"settings"`, `"videos"`, `"player/{videoIndex}"`
+
+**Transitions:** 300ms Slide + Fade Animationen, Pop-Transitions gespiegelt.
 
 ## Komponenten-Übersicht
 
 ### 1. Data Layer
+
+#### PreferencesManager.kt
+DataStore-Wrapper für persistente Einstellungen.
+
+```kotlin
+class PreferencesManager(context: Context) {
+    val hasCompletedOnboarding: Flow<Boolean>  // Beobachtbar
+    suspend fun setOnboardingCompleted()       // Einmalig beim Abschluss
+}
+```
 
 #### RecordingConfig.kt
 Datenklasse für Recording-Konfiguration.
 
 ```kotlin
 data class RecordingConfig(
-    val cameraLens: Int,           // LENS_FACING_BACK oder FRONT
-    val videoQuality: VideoQuality, // HD_720P, HD_1080P, UHD_4K
+    val cameraLens: Int,            // LENS_FACING_BACK oder FRONT
+    val videoQuality: VideoQuality,  // HD_720P, HD_1080P, UHD_4K
     val enableAudio: Boolean,
-    val maxDurationMinutes: Int,
+    val maxDurationMinutes: Int,     // 0 = unbegrenzt
     val stopAtLowBattery: Boolean,
-    val lowBatteryThreshold: Int
+    val lowBatteryThreshold: Int     // Standard: 10%
 )
 ```
-
-**Verwendung:**
-- Speichert User-Präferenzen für Recording
-- Wird an RecordingService übergeben
-- Persistiert durch ViewModel
 
 #### RecordingState.kt
 Sealed Class für Recording-Status.
@@ -71,10 +110,12 @@ sealed class RecordingState {
 }
 ```
 
-**Verwendung:**
-- State Management für UI
-- Observable durch StateFlow im ViewModel
-- Ermöglicht reaktive UI-Updates
+State Machine:
+```
+Idle → Starting → Recording → Stopping → Idle
+         ↓           ↓
+       Error       Error
+```
 
 #### VideoFile.kt
 Datenklasse für Video-Dateien.
@@ -84,28 +125,19 @@ data class VideoFile(
     val file: File,
     val name: String,
     val size: Long,
-    val duration: Long,
+    val duration: Long,          // Millisekunden, extrahiert via MediaMetadataRetriever
     val timestamp: Long,
-    val thumbnailPath: String?
-)
+    val thumbnailPath: String?   // Dateipfad für Coil VideoFrameDecoder
+) {
+    val sizeInMB: Float          // Berechnete Größe in MB
+    val formattedDuration: String // "H:MM:SS" oder "M:SS"
+}
 ```
-
-**Verwendung:**
-- Repräsentiert aufgenommene Videos
-- Wird in VideosScreen angezeigt
-- Ermöglicht Video-Management (Löschen, etc.)
 
 ### 2. Service Layer
 
 #### RecordingService.kt
-**Typ:** Foreground Service (extends LifecycleService)
-
-**Verantwortlichkeiten:**
-1. CameraX initialisieren und konfigurieren
-2. Video-Recording starten/stoppen
-3. Foreground Notification managen
-4. Wake Lock verwalten
-5. Video in MediaStore speichern
+**Typ:** Foreground Service (extends `LifecycleService`)
 
 **Lifecycle:**
 ```
@@ -113,13 +145,13 @@ START_RECORDING intent
     ↓
 onCreate() → acquireWakeLock()
     ↓
-onStartCommand() → startForeground()
+onStartCommand() → startForeground(notification mit ic_notification)
     ↓
-startRecordingVideo() → bindCameraX()
+startRecordingVideo() → CameraX binden
     ↓
 startRecordingToFile() → recording.start()
     ↓
-[Recording läuft...]
+[Recording läuft, Notification-Timer jede Sekunde]
     ↓
 STOP_RECORDING intent
     ↓
@@ -128,445 +160,259 @@ stopRecordingVideo() → recording.stop()
 onDestroy() → releaseWakeLock()
 ```
 
-**Wichtige Methoden:**
-
+**Statische API:**
 ```kotlin
-// Service starten
 companion object {
-    fun startRecording(context: Context, config: RecordingConfig)
-    fun stopRecording(context: Context)
+    var isRecording: Boolean              // Globaler Status-Flag
+    fun startRecording(context, config)   // Service starten
+    fun stopRecording(context)            // Service stoppen
 }
-
-// Interne Methoden
-private fun startRecordingVideo()  // CameraX Setup
-private fun startRecordingToFile() // Recording starten
-private fun stopRecordingVideo()   // Recording beenden
-private fun acquireWakeLock()      // Wake Lock holen
-private fun releaseWakeLock()      // Wake Lock freigeben
-private fun createNotification()   // Notification erstellen
 ```
 
-**CameraX Integration:**
+#### RecordingActionReceiver.kt
+BroadcastReceiver für Notification-Stop-Button.
+
 ```kotlin
-val recorder = Recorder.Builder()
-    .setQualitySelector(...)
-    .build()
-
-videoCapture = VideoCapture.withOutput(recorder)
-
-cameraProvider.bindToLifecycle(
-    this,
-    cameraSelector,
-    videoCapture
-)
+override fun onReceive(context: Context, intent: Intent) {
+    when (intent.action) {
+        ACTION_STOP_RECORDING -> RecordingService.stopRecording(context)
+    }
+}
 ```
-
-**Notification Management:**
-- Erstellt Foreground Notification mit Stop-Button
-- Update-Frequenz: 1 Sekunde (zeigt Aufnahmedauer)
-- Persistent während Recording
-- Wird bei Stop automatisch entfernt
 
 ### 3. ViewModel Layer
 
 #### RecordingViewModel.kt
-**Typ:** AndroidViewModel
-
-**Verantwortlichkeiten:**
-1. Recording State managen
-2. Konfiguration speichern/laden
-3. Service-Kontrolle (start/stop)
-4. Video-Liste verwalten
-5. UI-State bereitstellen
+**Typ:** `AndroidViewModel` — einziges ViewModel, geteilt zwischen allen Screens.
 
 **StateFlows:**
 ```kotlin
-val recordingState: StateFlow<RecordingState>
-val recordingConfig: StateFlow<RecordingConfig>
-val videoFiles: StateFlow<List<VideoFile>>
+val recordingState: StateFlow<RecordingState>     // UI-Zustand
+val recordingConfig: StateFlow<RecordingConfig>   // Einstellungen
+val videoFiles: StateFlow<List<VideoFile>>        // Video-Liste mit Dauer + Thumbnails
+val hasCompletedOnboarding: StateFlow<Boolean>    // Onboarding-Status
 ```
 
 **Public API:**
 ```kotlin
-// Recording Control
+// Recording
 fun startRecording()
 fun stopRecording()
 fun isRecording(): Boolean
 
-// Configuration
+// Konfiguration
 fun updateCameraLens(lens: Int)
 fun updateVideoQuality(quality: VideoQuality)
 fun updateEnableAudio(enabled: Boolean)
 fun updateMaxDuration(minutes: Int)
 fun updateStopAtLowBattery(enabled: Boolean)
 
-// Video Management
-fun loadVideoFiles()
+// Video-Management
+fun loadVideoFiles()                // Scannt /Movies/XCam/, extrahiert Dauer
 fun deleteVideo(videoFile: VideoFile)
+
+// Onboarding
+fun completeOnboarding()            // Persistiert in DataStore
 ```
 
-**State Management:**
-```
-Idle → Starting → Recording → Stopping → Idle
-         ↓           ↓
-       Error       Error
-```
+**Video-Laden:** Scannt `/Movies/XCam/` auf IO-Dispatcher, extrahiert Dauer via `MediaMetadataRetriever`, setzt `thumbnailPath` auf Dateipfad (Coil `VideoFrameDecoder` generiert Thumbnail).
 
 ### 4. UI Layer
 
-#### MainActivity.kt
-**Typ:** ComponentActivity
+#### Theme
 
-**Verantwortlichkeiten:**
-1. Entry Point der App
-2. Permission Management
-3. Navigation Host
-4. Theme Provider
+**Color.kt — Dark & Amber Palette:**
+- Primär: `Amber80`, `Amber60`, `Amber40` (Primary), `Amber30`, `Amber20`
+- Recording: `RecordingAmber`, `RecordingAmberGlow`, `RecordingAmberPulse`
+- Recording-Dot: `RecordingRed` (universell erkennbar)
+- Oberflächen: `DarkBackground` (#0A0A0A), `DarkSurface` (#121212), `DarkSurfaceVariant` (#1E1E1E)
+- Glassmorphismus: `SurfaceGlass` (10% weiß), `SurfaceGlassStroke` (20% weiß)
+- Semantisch: `SuccessGreen`, `WarningAmber`, `ErrorRed`, `InfoBlue`
 
-**Permission Flow:**
-```kotlin
-onCreate()
-    ↓
-hasAllPermissions() → No → Request Permissions
-    ↓                         ↓
-   Yes                    Launcher Callback
-    ↓                         ↓
-  Allow Access ←──────────────┘
-```
+**Theme.kt:**
+- `XCamDarkColorScheme` und `XCamLightColorScheme` mit Amber-Akzenten
+- Dynamische Farben deaktiviert (immer Custom Theme)
 
-**Navigation:**
-```kotlin
-NavHost(startDestination = "main") {
-    composable("main") { MainScreen(...) }
-    composable("settings") { SettingsScreen(...) }
-    composable("videos") { VideosScreen(...) }
-}
-```
+**Type.kt — Inter Font:**
+- `InterFontFamily` mit 4 Gewichten (Regular, Medium, SemiBold, Bold)
+- Alle Material 3 Typography-Styles verwenden Inter
 
-#### MainScreen.kt
-Haupt-Interface der App.
+#### Components.kt
 
-**Komponenten:**
-- TopAppBar mit Navigation-Icons
-- Recording Status Display
-- Start/Stop Button
-- Configuration Card
-- Permission Request UI (wenn nötig)
+| Komponente | Beschreibung |
+|-----------|-------------|
+| `AnimatedRecordingIndicator` | Pulsierender Amber-Punkt mit Glow + rotierender Gradient-Bogen bei Recording, Breathe-Animation bei Idle |
+| `AnimatedRecordButton` | 72dp FAB mit Spring-Animation, Haptic Feedback |
+| `GlassmorphicCard` | Semi-transparente Karte mit `SurfaceGlass` Hintergrund + `SurfaceGlassStroke` Border |
+| `GradientCard` | Delegiert zu `GlassmorphicCard` |
+| `StatusChip` | Recording-Status-Badge mit Alpha-Pulsierung |
+| `ShimmerEffect` | Lade-Shimmer für Thumbnails |
+| `EmptyState` | Zentrierte Nachricht für leere Listen |
+| `ConfigDisplayRow` | Label-Value-Paar |
 
-**State Handling:**
-```kotlin
-val recordingState by viewModel.recordingState.collectAsState()
+#### Screens
 
-when (recordingState) {
-    is Idle -> ShowStartButton()
-    is Recording -> ShowStopButton()
-    is Starting -> ShowLoading()
-    is Stopping -> ShowLoading()
-    is Error -> ShowError()
-}
-```
+**OnboardingScreen.kt:**
+- `HorizontalPager` mit 4 Seiten und Amber Page-Indicator-Dots
+- Spring-animierte Seitentransitionen mit Scale-Effekt
+- Auto-Advance nach erteilter Berechtigung
+- Berechtigungs-Granted-Indikator (grüner Badge)
 
-#### SettingsScreen.kt
-Konfigurations-Interface.
+**MainScreen.kt:**
+- Transparente TopAppBar
+- Radialer Ambient-Gradient-Hintergrund (`Amber40` bei 3% Alpha)
+- Konzentrische Ringe (180dp/160dp) hinter Recording-Indikator
+- Elapsed-Time-Display (Monospace, `RecordingAmber`)
+- GlassmorphicCard für Konfigurationsanzeige
 
-**Settings:**
-1. Kamera-Auswahl (Back/Front)
-2. Video-Qualität (720p/1080p/4K)
-3. Audio Ein/Aus
-4. Batterie-Management
-5. Legal Disclaimer
+**SettingsScreen.kt:**
+- Alle Einstellungen in GlassmorphicCards
+- SegmentedButtons für Kamera und Qualität
+- Weicher Amber-Hinweis für Legal Disclaimer
+- "About XCam"-Sektion mit Versionsnummer
 
-**UI Pattern:**
-```kotlin
-SettingSection(title = "Camera") {
-    SegmentedButton(...)  // Auswahl-Buttons
-}
-```
+**VideosScreen.kt:**
+- `AsyncImage` (Coil) mit `VideoFrameDecoder` für echte Thumbnails (80dp)
+- Play-Icon-Overlay und Dauer-Badge auf Thumbnails
+- Tap navigiert zu `player/{index}`
+- Glassmorphe Karten mit staggered Entrance-Animationen
 
-#### VideosScreen.kt
-Video-Verwaltung.
+**VideoPlayerScreen.kt:**
+- Vollbild `PlayerView` via `AndroidView` mit Media3 ExoPlayer
+- Auto-hiding Controls (3s Timeout, Toggle per Tap)
+- Zentraler Play/Pause-Button (72dp, halbtransparenter Kreis)
+- Amber Seek Bar + Zeitanzeige (Monospace)
+- Proper `DisposableEffect` für ExoPlayer-Lifecycle
 
-**Features:**
-- LazyColumn mit Video-Liste
-- Video-Item mit Details (Name, Größe, Datum)
-- Delete-Button mit Bestätigungs-Dialog
-- Empty State bei keinen Videos
+#### Icons (CustomIcons.kt)
 
-**Video Loading:**
-```kotlin
-LaunchedEffect(Unit) {
-    viewModel.loadVideoFiles()
-}
-```
+Eigene `ImageVector`-Icons statt Material Extended Icons Library (~10-15 MB Ersparnis):
+
+| Icon | Verwendung |
+|------|-----------|
+| `VideocamCustom` | Onboarding, allgemein |
+| `FiberManualRecordCustom` | Recording-Indikator |
+| `PlayArrowCustom` / `PauseCustom` | Player Controls |
+| `StopCustom` | Recording Stop |
+| `ArrowBackCustom` | Navigation zurück |
+| `SettingsCustom` | Einstellungen |
+| `VideoLibraryCustom` / `VideoFileCustom` | Video-Liste |
+| `DeleteCustom` | Video löschen |
+| `WarningCustom` | Berechtigungen |
+| `ShareCustom` | Video teilen |
+| `CameraLensCustom` / `MicrophoneCustom` / `NotificationBellCustom` / `ShieldCustom` | Onboarding |
+| `InfoCustom` | About-Sektion |
+| `ChevronRightCustom` / `FullscreenCustom` | Navigation/UI |
 
 ### 5. Utility Layer
 
 #### Constants.kt
-Zentrale Konstanten-Verwaltung.
-
 ```kotlin
 object Constants {
-    // Notification
     const val NOTIFICATION_CHANNEL_ID = "recording_channel"
     const val NOTIFICATION_ID = 1001
-
-    // Actions
-    const val ACTION_START_RECORDING = "..."
-    const val ACTION_STOP_RECORDING = "..."
-
-    // Storage
+    const val ACTION_START_RECORDING = "io.celox.xcam.ACTION_START_RECORDING"
+    const val ACTION_STOP_RECORDING = "io.celox.xcam.ACTION_STOP_RECORDING"
     const val VIDEO_DIRECTORY = "XCam"
     const val VIDEO_FILE_PREFIX = "VID_"
+    const val WAKE_LOCK_TAG = "XCam::RecordingWakeLock"
+    // ...
 }
 ```
 
 #### PermissionUtils.kt
-Permission-Management Helper.
-
 ```kotlin
 object PermissionUtils {
-    fun getRequiredPermissions(): List<String>
+    fun getRequiredPermissions(): List<String>     // CAMERA, RECORD_AUDIO, POST_NOTIFICATIONS
     fun hasAllPermissions(context: Context): Boolean
     fun getMissingPermissions(context: Context): List<String>
 }
 ```
 
-### 6. Receiver Layer
-
-#### RecordingActionReceiver.kt
-**Typ:** BroadcastReceiver
-
-**Zweck:**
-- Empfängt Broadcast von Notification-Buttons
-- Leitet Actions an RecordingService weiter
-
-```kotlin
-override fun onReceive(context: Context, intent: Intent) {
-    when (intent.action) {
-        ACTION_STOP_RECORDING ->
-            RecordingService.stopRecording(context)
-    }
-}
-```
-
 ## Datenfluss
 
-### Recording Starten
+### Recording starten
 
 ```
-User drückt "Start Recording" in MainScreen
-    ↓
-MainScreen.onStartRecording()
+User drückt "Start Recording"
     ↓
 RecordingViewModel.startRecording()
     ↓
-RecordingService.startRecording(context, config)
+RecordingService.startRecording(context, config) → Intent
     ↓
-Intent mit ACTION_START_RECORDING
+Service: startForeground() + CameraX binden + recording.start()
     ↓
-RecordingService.onStartCommand()
+ViewModel: recordingState → Recording(startTime, path)
     ↓
-startForeground() + startRecordingVideo()
-    ↓
-CameraX initialisieren + Recording starten
-    ↓
-VideoRecordEvent.Start callback
-    ↓
-Notification updaten mit Timer
-    ↓
-[Recording läuft im Hintergrund]
+MainScreen: Amber-Glow + Timer + konz. Ringe anzeigen
 ```
 
-### Recording Stoppen
+### Recording stoppen
 
 ```
-User drückt "Stop" in Notification
+User drückt "Stop" (Notification oder App)
     ↓
-RecordingActionReceiver.onReceive()
+RecordingService.stopRecording() → Intent / RecordingActionReceiver
     ↓
-RecordingService.stopRecording(context)
+Service: recording.stop() → Video in MediaStore
     ↓
-Intent mit ACTION_STOP_RECORDING
+Service: stopSelf() + releaseWakeLock()
     ↓
-RecordingService.stopRecordingVideo()
+ViewModel: recordingState → Idle, loadVideoFiles()
     ↓
-recording.stop()
-    ↓
-VideoRecordEvent.Finalize callback
-    ↓
-Video in MediaStore gespeichert
-    ↓
-stopSelf() + releaseWakeLock()
-    ↓
-Service destroyed
+VideosScreen: Neue Aufnahme mit Thumbnail sichtbar
 ```
 
-### Video Liste laden
+### Video abspielen
 
 ```
-VideosScreen wird geöffnet
+User tippt Video-Thumbnail in VideosScreen
     ↓
-LaunchedEffect triggers
+Navigate to "player/{videoIndex}"
     ↓
-RecordingViewModel.loadVideoFiles()
+VideoPlayerScreen: ExoPlayer.Builder(context).build()
     ↓
-Scanne /Movies/XCam/ Verzeichnis
+MediaItem.fromUri(videoFile.file) → prepare() → playWhenReady
     ↓
-Erstelle VideoFile-Objekte
+Player.Listener → isPlaying, duration tracking
     ↓
-Update videoFiles StateFlow
-    ↓
-UI beobachtet StateFlow
-    ↓
-LazyColumn zeigt Videos
+DisposableEffect onDispose → exoPlayer.release()
 ```
 
-## Threading Model
+## Threading
 
-### UI Thread
-- Alle Compose-UI-Updates
-- StateFlow-Collection
-- Button-Clicks
+| Thread | Operationen |
+|--------|------------|
+| **UI/Main** | Compose Rendering, StateFlow Collection, User-Input |
+| **Main** | Service Lifecycle, CameraX Callbacks (MainExecutor), Notification Updates |
+| **IO (Coroutines)** | Video-Dateien scannen, MediaMetadataRetriever, Datei-Löschung, DataStore |
+| **CameraX Thread Pool** | Video-Encoding, Frame-Processing, File I/O |
 
-### Main Thread
-- Service Lifecycle (onCreate, onStartCommand, etc.)
-- CameraX Callbacks (MainExecutor)
-- Notification Updates
+## Abhängigkeiten
 
-### Background (Coroutines)
-```kotlin
-// In ViewModel
-viewModelScope.launch {
-    // Video-Datei-Operationen
-    // Configuration laden/speichern
-}
+| Bibliothek | Version | Zweck |
+|-----------|---------|-------|
+| Jetpack Compose + Material 3 | BOM | UI Framework |
+| Compose Foundation | 1.6.0 | HorizontalPager |
+| Navigation Compose | 2.7.5 | Screen-Navigation |
+| CameraX | 1.3.0 | Kamera + Video-Recording |
+| Media3 ExoPlayer | 1.2.0 | Video-Wiedergabe |
+| Coil | 2.5.0 | Bild-Laden + Video-Thumbnails |
+| Core SplashScreen | 1.0.1 | Nativer Splash Screen |
+| DataStore Preferences | 1.0.0 | Persistente Einstellungen |
+| Lifecycle | 2.6.2 | ViewModel, Service |
+| Accompanist Permissions | 0.32.0 | Runtime Permissions |
+| Coroutines | 1.7.3 | Asynchrone Operationen |
 
-// In Service
-lifecycleScope.launch {
-    // Recording Timer
-    // Prozess-Monitoring
-}
-```
+## CI/CD
 
-### CameraX Thread Pool
-- Video-Encoding
-- Frame-Processing
-- File I/O
-
-## Memory Management
-
-### Wake Lock
-```kotlin
-// Acquire
-PowerManager.newWakeLock(
-    PARTIAL_WAKE_LOCK,
-    TAG
-).acquire(24.hours)
-
-// Release
-if (wakeLock.isHeld) {
-    wakeLock.release()
-}
-```
-
-### CameraX Resources
-```kotlin
-// Cleanup
-cameraProvider.unbindAll()
-recording?.close()
-videoCapture = null
-```
-
-## Error Handling
-
-### Service Level
-```kotlin
-try {
-    startRecordingVideo()
-} catch (e: Exception) {
-    Log.e(TAG, "Error starting recording", e)
-    stopSelf()
-}
-```
-
-### ViewModel Level
-```kotlin
-try {
-    loadVideoFiles()
-} catch (e: Exception) {
-    _videoFiles.value = emptyList()
-}
-```
-
-### UI Level
-```kotlin
-when (val state = recordingState.value) {
-    is RecordingState.Error -> {
-        ShowErrorDialog(state.message)
-    }
-}
-```
-
-## Best Practices
-
-### 1. State Management
-- ✅ Verwende StateFlow für reaktive UI
-- ✅ Sealed Classes für type-safe States
-- ✅ Zentrales ViewModel für Shared State
-
-### 2. Service Management
-- ✅ Foreground Service für sichtbare Background-Arbeit
-- ✅ Wake Lock nur während Recording
-- ✅ Proper cleanup in onDestroy()
-
-### 3. CameraX
-- ✅ unbindAll() vor neu-binden
-- ✅ LifecycleService für automatisches Management
-- ✅ Error Handling bei Camera-Initialisierung
-
-### 4. Permissions
-- ✅ Runtime Permission Requests
-- ✅ Graceful Degradation bei fehlenden Permissions
-- ✅ User-freundliche Permission-Erklärungen
-
-### 5. UI/UX
-- ✅ Loading States anzeigen
-- ✅ Error States handhaben
-- ✅ Confirmation Dialogs für destructive Actions
-
-## Performance Considerations
-
-### Startup Time
-- Lazy Initialization wo möglich
-- Vermeiden von blocking Operations im Main Thread
-
-### Memory
-- CameraX-Resources nach Verwendung freigeben
-- Begrenzung der Video-Liste (Pagination bei sehr vielen Videos)
-
-### Battery
-- Wake Lock nur während Recording
-- Quality Selector basierend auf User-Präferenz
-- Stop bei niedrigem Akkustand
-
-## Testing Strategy
-
-### Unit Tests
-- ViewModel Logik
-- Permission Utils
-- Data Models
-
-### Integration Tests
-- Service Lifecycle
-- Camera Initialization
-- File Storage
-
-### UI Tests
-- Navigation Flow
-- Permission Requests
-- Recording Start/Stop
+GitHub Actions Workflow (`.github/workflows/build-apk.yml`):
+- **Trigger:** Git-Tag `v*` oder manuell (workflow_dispatch)
+- **Build:** `assembleReleaseDebug` (minifiziert mit R8, Debug-Signatur)
+- **Output:** `XCam-{version}-arm64-v8a.apk`
+- **Release:** Automatische GitHub Release-Erstellung mit APK-Anhang
 
 ---
 
-**Version:** 1.0
-**Last Updated:** 2024
+**Version:** 2.0
+**Last Updated:** 2025
