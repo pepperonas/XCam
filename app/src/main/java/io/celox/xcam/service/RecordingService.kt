@@ -172,6 +172,7 @@ class RecordingService : LifecycleService() {
         }
     }
 
+    @android.annotation.SuppressLint("MissingPermission")
     private fun startRecordingToFile() {
         val name = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
             .format(System.currentTimeMillis())
