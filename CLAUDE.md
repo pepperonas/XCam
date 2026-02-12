@@ -4,84 +4,79 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-XCam is a native Android app (Kotlin) for background video recording with the screen off. It targets Android 13+ (API 33+) on ARM64 devices only. Package: `io.celox.xcam`. Version 2.0.
+XCam is a native Android app (Kotlin) for background video recording with the screen off. Targets Android 13+ (API 33+), ARM64 only. Package: `io.celox.xcam`.
 
-## Build Commands
+## Build & Test Commands
 
 ```bash
-./gradlew assembleDebug           # Build debug APK
-./gradlew assembleReleaseDebug    # Build release-like APK with debug signing (minified + shrunk)
-./gradlew assembleRelease         # Build release APK (requires signing config)
-./gradlew installDebug            # Install debug APK on connected device
-./gradlew test                    # Run unit tests
-./gradlew connectedAndroidTest    # Run instrumented tests on device
+# Build
+./gradlew assembleDebug           # Debug APK (no minification)
+./gradlew assembleReleaseDebug    # Release-like APK with debug signing (R8 minified)
+./gradlew assembleRelease         # Release APK (requires signing config)
+./gradlew installDebug            # Build and install on connected device
+
+# Test
+./gradlew testDebugUnitTest       # Run all 43 unit tests
+./gradlew testDebugUnitTest --tests "io.celox.xcam.data.model.VideoFileTest"        # Run single test class
+./gradlew testDebugUnitTest --tests "io.celox.xcam.data.model.VideoFileTest.sizeInMB*"  # Run single test method
+
+# Lint
+./gradlew lintDebug               # Android lint (CI enforces 0 errors)
+
+# Combined (matches CI pipeline)
+./gradlew testDebugUnitTest lintDebug assembleDebug
 ```
 
-The project uses a version catalog at `gradle/libs.versions.toml` for dependency management. Some dependencies (CameraX, Navigation, Lifecycle, Accompanist, DataStore, Coroutines, Coil, Media3) are declared inline in `app/build.gradle.kts`.
+Test reports: `app/build/reports/tests/testDebugUnitTest/index.html`
+Lint report: `app/build/reports/lint-results-debug.html`
 
-APK splits are configured for `arm64-v8a` only (no universal APK).
+## CI/CD
+
+GitHub Actions (`.github/workflows/ci.yml`): runs on push to `main` and PRs. Three jobs: Unit Tests, Lint Check, Build APK (depends on test+lint). Release workflow (`.github/workflows/build-apk.yml`) triggers on `v*` tags.
 
 ## Architecture
 
-MVVM pattern with Jetpack Compose UI, no dependency injection framework.
+MVVM with Jetpack Compose, no DI framework. Single shared `RecordingViewModel` (AndroidViewModel) created in `MainActivity` and passed to all screens.
 
-### Data Flow
+### Key State Flows
 
-```
-MainActivity (NavHost, permission handling, splash screen)
-    ├─> OnboardingScreen (first launch, permission flow)
-    └─> Screens (MainScreen, SettingsScreen, VideosScreen, VideoPlayerScreen)
-            └─> RecordingViewModel (AndroidViewModel, shared across all screens)
-                    ├─> RecordingService (LifecycleService, foreground service)
-                    ├─> PreferencesManager (DataStore, onboarding state)
-                    └─> StateFlows: recordingState, recordingConfig, videoFiles, hasCompletedOnboarding
-```
-
-**RecordingViewModel** is the single shared ViewModel created in `MainActivity` and passed to all screens. It holds all state as `MutableStateFlow`/`StateFlow`:
-- `recordingState: StateFlow<RecordingState>` - sealed class: Idle, Starting, Recording, Stopping, Error
-- `recordingConfig: StateFlow<RecordingConfig>` - data class with camera lens, quality, audio, duration, battery settings
-- `videoFiles: StateFlow<List<VideoFile>>` - scanned from `/Movies/XCam/` directory with duration metadata
-- `hasCompletedOnboarding: StateFlow<Boolean>` - first-launch onboarding state
-
-**RecordingService** is a `LifecycleService` (not plain Service) that:
-- Uses CameraX `VideoCapture`/`Recorder` API for recording
-- Saves to MediaStore (`Movies/XCam/`)
-- Manages wake lock, notification with stop action, and recording timer
-- Communicates recording state via companion object `isRecording` static flag
-- Started/stopped via static helper methods `startRecording(context, config)` / `stopRecording(context)`
-- Config passed through Intent extras (not shared memory)
-
-**PreferencesManager** wraps DataStore Preferences for persisting onboarding completion state.
-
-**RecordingActionReceiver** is a BroadcastReceiver that handles the stop action from the notification.
+- `recordingState: StateFlow<RecordingState>` — sealed class: Idle, Starting, Recording(startTime, outputPath), Stopping, Error(message)
+- `recordingConfig: StateFlow<RecordingConfig>` — camera lens, quality, audio, duration, battery settings
+- `videoFiles: StateFlow<List<VideoFile>>` — scanned from `/Movies/XCam/` with duration metadata
+- `hasCompletedOnboarding: StateFlow<Boolean>` — backed by DataStore via `PreferencesManager`
 
 ### Navigation
 
-String-based routes in `MainActivity.XCamApp()`: `"onboarding"`, `"main"`, `"settings"`, `"videos"`, `"player/{videoIndex}"`. Custom enter/exit/pop transitions with slide + fade animations (300ms). Dynamic start destination based on onboarding state.
+String routes in `MainActivity.XCamApp()`: `"onboarding"` → `"main"` → `"settings"` / `"videos"` → `"player/{videoIndex}"`. Start destination is dynamic based on onboarding state.
 
-### UI
+### Recording Pipeline
 
-- Jetpack Compose with Material 3
-- Dark theme with amber/orange accents (defined in `ui/theme/`)
+`RecordingViewModel.startRecording()` → `RecordingService.startRecording(context, config)` (static helper, starts foreground service via Intent) → CameraX `VideoCapture`/`Recorder` → saves to MediaStore `Movies/XCam/`. Service is a `LifecycleService` with wake lock + notification with stop action. Config is passed through Intent extras. Recording state is communicated via `RecordingService.isRecording` companion object flag (polled by ViewModel).
+
+### UI Layer
+
+- Dark theme with amber/orange accents (`ui/theme/`)
+- Custom vector icons in `ui/icons/CustomIcons.kt` (replaces Material Extended Icons, saves ~10-15 MB)
+- Reusable components in `ui/components/Components.kt`: GlassmorphicCard, AnimatedRecordButton, AnimatedRecordingIndicator, StatusChip, ShimmerEffect
+- Video playback: Media3 ExoPlayer in `VideoPlayerScreen`
+- Video thumbnails: Coil with `VideoFrameDecoder` in `VideosScreen`
 - Inter font family bundled in `res/font/` (4 weights)
-- Custom vector icons in `ui/icons/CustomIcons.kt` (replaces Material Extended Icons to save ~10-15 MB APK size)
-- Reusable components in `ui/components/Components.kt` (GlassmorphicCard, AnimatedRecordButton, StatusChip, ShimmerEffect)
-- Splash screen via AndroidX SplashScreen API
-- 4-page onboarding flow with HorizontalPager
-- In-app video player using Media3 ExoPlayer
-- Video thumbnails via Coil with VideoFrameDecoder
-- Adaptive app icon (stealth eye design) in `res/mipmap-anydpi-v26/`
 
-### Key Constants
+### Dependencies
 
-All intent actions, extras, notification IDs, and storage paths are centralized in `util/Constants.kt`.
+Version catalog at `gradle/libs.versions.toml` for core deps (Compose BOM, core-ktx, JUnit). Many deps declared inline in `app/build.gradle.kts`: CameraX 1.3, Media3 1.2, Coil 2.5, Navigation Compose 2.7, Accompanist Permissions 0.32, DataStore 1.0, Compose Foundation 1.6, SplashScreen 1.0.
 
 ## Build Variants
 
 - **debug**: No minification
-- **releaseDebug**: Minified + shrunk with R8, uses debug signing (for testing release behavior)
-- **release**: Minified + shrunk with R8, requires release signing config
+- **releaseDebug**: R8 minified + shrunk, debug signing (test release behavior without signing config)
+- **release**: R8 minified + shrunk, requires release signing config
 
-## Language
+## Lint Suppressions
 
-README and code comments are in German. Code (variable names, class names) is in English.
+- `@SuppressLint("MissingPermission")` on `RecordingService.startRecordingToFile()` — permissions are verified before service starts
+- `@Suppress("UnsafeOptInUsageError")` on `PlayerView.setShowBuffering()` in `VideoPlayerScreen` — Media3 unstable API
+
+## Key Constants
+
+All intent actions, extras, notification IDs, and storage paths centralized in `util/Constants.kt`. Videos stored at `Movies/XCam/*.mp4`.
