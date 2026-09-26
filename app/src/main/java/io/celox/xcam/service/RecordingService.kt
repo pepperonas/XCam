@@ -1,304 +1,334 @@
 package io.celox.xcam.service
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import android.provider.MediaStore
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.video.*
+import androidx.camera.video.MediaStoreOutputOptions
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.Recorder
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoCapture
+import androidx.camera.video.VideoRecordEvent
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import io.celox.xcam.MainActivity
 import io.celox.xcam.R
+import io.celox.xcam.data.RecordingRepository
 import io.celox.xcam.data.model.RecordingConfig
+import io.celox.xcam.data.model.RecordingState
 import io.celox.xcam.data.model.VideoQuality
 import io.celox.xcam.receiver.RecordingActionReceiver
 import io.celox.xcam.util.Constants
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.guava.await
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+/**
+ * Records video with the screen off: a camera|microphone foreground service holding a partial wake
+ * lock, bound to its own lifecycle so CameraX keeps running without any UI.
+ *
+ * It is also the only writer of [RecordingRepository]: every state the UI shows comes from a real
+ * CameraX event here, never from a guess on the UI side.
+ */
 class RecordingService : LifecycleService() {
-
     private var recording: Recording? = null
-    private var videoCapture: VideoCapture<Recorder>? = null
     private var wakeLock: PowerManager.WakeLock? = null
-    private var recordingJob: Job? = null
-    private var recordingStartTime: Long = 0
-    private var maxDurationMillis: Long = 0
+    private var finalizeTimeout: Job? = null
+    private lateinit var config: RecordingConfig
 
     private lateinit var notificationManager: NotificationManager
-    private lateinit var config: RecordingConfig
 
     companion object {
         private const val TAG = "RecordingService"
 
-        fun startRecording(context: Context, config: RecordingConfig) {
-            val intent = Intent(context, RecordingService::class.java).apply {
-                action = Constants.ACTION_START_RECORDING
-                putExtra(Constants.EXTRA_CAMERA_LENS, config.cameraLens)
-                putExtra(Constants.EXTRA_VIDEO_QUALITY, config.videoQuality.ordinal)
-                putExtra(Constants.EXTRA_ENABLE_AUDIO, config.enableAudio)
+        /** How long to wait for CameraX's Finalize after stop() before giving up and shutting down. */
+        private const val FINALIZE_TIMEOUT_MS = 5_000L
+
+        fun startRecording(
+            context: Context,
+            config: RecordingConfig,
+        ) {
+            if (!RecordingRepository.onStartRequested()) return
+            val intent =
+                Intent(context, RecordingService::class.java).apply {
+                    action = Constants.ACTION_START_RECORDING
+                    putExtra(Constants.EXTRA_CAMERA_LENS, config.cameraLens)
+                    putExtra(Constants.EXTRA_VIDEO_QUALITY, config.videoQuality.name)
+                    putExtra(Constants.EXTRA_ENABLE_AUDIO, config.enableAudio)
+                    putExtra(Constants.EXTRA_MAX_DURATION_MS, config.maxDurationMillis)
+                }
+            try {
+                ContextCompat.startForegroundService(context, intent)
+            } catch (e: IllegalStateException) {
+                // Background-start restriction: the service never ran, so nothing else will settle the state.
+                RecordingRepository.onError(RecordingState.Error(RecordingState.Reason.CAMERA_UNAVAILABLE, e.message))
             }
-            ContextCompat.startForegroundService(context, intent)
         }
 
         fun stopRecording(context: Context) {
-            val intent = Intent(context, RecordingService::class.java).apply {
-                action = Constants.ACTION_STOP_RECORDING
-            }
+            val intent =
+                Intent(context, RecordingService::class.java).apply {
+                    action = Constants.ACTION_STOP_RECORDING
+                }
             context.startService(intent)
         }
-
-        var isRecording = false
-            private set
     }
 
     override fun onCreate() {
         super.onCreate()
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         createNotificationChannel()
-        acquireWakeLock()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
         super.onStartCommand(intent, flags, startId)
 
         when (intent?.action) {
             Constants.ACTION_START_RECORDING -> {
-                config = RecordingConfig(
-                    cameraLens = intent.getIntExtra(Constants.EXTRA_CAMERA_LENS, CameraSelector.LENS_FACING_BACK),
-                    videoQuality = VideoQuality.values()[intent.getIntExtra(Constants.EXTRA_VIDEO_QUALITY, 1)],
-                    enableAudio = intent.getBooleanExtra(Constants.EXTRA_ENABLE_AUDIO, true)
-                )
+                config =
+                    RecordingConfig(
+                        cameraLens = intent.getIntExtra(Constants.EXTRA_CAMERA_LENS, CameraSelector.LENS_FACING_BACK),
+                        videoQuality = VideoQuality.fromName(intent.getStringExtra(Constants.EXTRA_VIDEO_QUALITY)),
+                        enableAudio = intent.getBooleanExtra(Constants.EXTRA_ENABLE_AUDIO, true),
+                        maxDurationMinutes =
+                        (intent.getLongExtra(Constants.EXTRA_MAX_DURATION_MS, 0L) / 60_000L).toInt(),
+                    )
 
-                // Start foreground with proper service type for audio recording
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                try {
                     startForeground(
                         Constants.NOTIFICATION_ID,
-                        createNotification("Initializing..."),
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                        buildNotification(startTime = null),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE,
                     )
-                } else {
-                    startForeground(Constants.NOTIFICATION_ID, createNotification("Initializing..."))
+                } catch (e: Exception) {
+                    // e.g. a missing permission or a background-start restriction.
+                    Log.e(TAG, "Cannot enter foreground", e)
+                    fail(RecordingState.Reason.CAMERA_UNAVAILABLE, e.message)
+                    return START_NOT_STICKY
                 }
-
+                acquireWakeLock()
                 startRecordingVideo()
             }
-            Constants.ACTION_STOP_RECORDING -> {
-                stopRecordingVideo()
-            }
+            Constants.ACTION_STOP_RECORDING -> stopRecordingVideo()
+            // A sticky restart after the process died has no recording to resume.
+            else -> stopSelf()
         }
 
-        return START_STICKY
+        // Not sticky: a system restart could not resume the old recording anyway and would only
+        // re-open the camera with nobody asking for it.
+        return START_NOT_STICKY
     }
 
     private fun acquireWakeLock() {
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = powerManager.newWakeLock(
-            PowerManager.PARTIAL_WAKE_LOCK,
-            Constants.WAKE_LOCK_TAG
-        ).apply {
-            acquire(TimeUnit.HOURS.toMillis(24)) // Max 24 hours
-        }
-        Log.d(TAG, "Wake lock acquired")
+        wakeLock =
+            powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, Constants.WAKE_LOCK_TAG).apply {
+                acquire(TimeUnit.HOURS.toMillis(24)) // Max 24 hours
+            }
     }
 
     private fun releaseWakeLock() {
-        wakeLock?.let {
-            if (it.isHeld) {
-                it.release()
-                Log.d(TAG, "Wake lock released")
-            }
-        }
+        wakeLock?.let { if (it.isHeld) it.release() }
+        wakeLock = null
     }
 
     private fun startRecordingVideo() {
         lifecycleScope.launch {
             try {
-                val cameraProvider = ProcessCameraProvider.getInstance(this@RecordingService).get()
+                val cameraProvider = ProcessCameraProvider.getInstance(this@RecordingService).await()
 
-                // Setup recorder
-                val recorder = Recorder.Builder()
-                    .setQualitySelector(
-                        QualitySelector.from(
-                            when (config.videoQuality) {
-                                VideoQuality.HD_720P -> Quality.HD
-                                VideoQuality.HD_1080P -> Quality.FHD
-                                VideoQuality.UHD_4K -> Quality.UHD
-                            }
-                        )
-                    )
-                    .build()
+                val recorder =
+                    Recorder.Builder()
+                        .setQualitySelector(
+                            QualitySelector.from(
+                                when (config.videoQuality) {
+                                    VideoQuality.HD_720P -> Quality.HD
+                                    VideoQuality.HD_1080P -> Quality.FHD
+                                    VideoQuality.UHD_4K -> Quality.UHD
+                                },
+                                // Fall back instead of failing when a lens cannot do the chosen size.
+                                androidx.camera.video.FallbackStrategy.lowerQualityOrHigherThan(Quality.SD),
+                            ),
+                        ).build()
+                val videoCapture = VideoCapture.withOutput(recorder)
+                val cameraSelector = CameraSelector.Builder().requireLensFacing(config.cameraLens).build()
 
-                videoCapture = VideoCapture.withOutput(recorder)
-
-                // Select camera
-                val cameraSelector = CameraSelector.Builder()
-                    .requireLensFacing(config.cameraLens)
-                    .build()
-
-                // Unbind all use cases before rebinding
                 cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(this@RecordingService, cameraSelector, videoCapture)
 
-                // Bind to lifecycle
-                cameraProvider.bindToLifecycle(
-                    this@RecordingService,
-                    cameraSelector,
-                    videoCapture
-                )
-
-                // Start recording
-                startRecordingToFile()
-
+                startRecordingToFile(recorder)
             } catch (e: Exception) {
                 Log.e(TAG, "Error starting recording", e)
-                stopSelf()
+                fail(RecordingState.Reason.CAMERA_UNAVAILABLE, e.message)
             }
         }
     }
 
-    @android.annotation.SuppressLint("MissingPermission")
-    private fun startRecordingToFile() {
-        val name = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-            .format(System.currentTimeMillis())
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/${Constants.VIDEO_DIRECTORY}")
+    // Permissions are verified by the UI before the service is started.
+    @SuppressLint("MissingPermission")
+    private fun startRecordingToFile(recorder: Recorder) {
+        val name = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val contentValues =
+            ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+                put(MediaStore.MediaColumns.MIME_TYPE, Constants.VIDEO_MIME_TYPE)
+                put(MediaStore.Video.Media.RELATIVE_PATH, Constants.RELATIVE_VIDEO_PATH)
             }
-        }
 
-        val mediaStoreOutputOptions = MediaStoreOutputOptions
-            .Builder(contentResolver, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
-            .setContentValues(contentValues)
-            .build()
+        val outputOptions =
+            MediaStoreOutputOptions
+                .Builder(contentResolver, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+                .setContentValues(contentValues)
+                // CameraX enforces the limit itself and finalizes with ERROR_DURATION_LIMIT_REACHED.
+                .apply { if (config.maxDurationMillis > 0) setDurationLimitMillis(config.maxDurationMillis) }
+                .build()
 
-        val recorder = videoCapture?.output as? Recorder
-        if (recorder == null) {
-            Log.e(TAG, "Recorder is null")
-            stopSelf()
-            return
-        }
-
-        recording = if (config.enableAudio) {
-            recorder.prepareRecording(this, mediaStoreOutputOptions)
-                .withAudioEnabled()
-        } else {
-            recorder.prepareRecording(this, mediaStoreOutputOptions)
-        }.start(ContextCompat.getMainExecutor(this)) { recordEvent ->
-            when (recordEvent) {
-                is VideoRecordEvent.Start -> {
-                    recordingStartTime = System.currentTimeMillis()
-                    isRecording = true
-                    updateNotification("Recording... 00:00")
-                    startRecordingTimer()
-                    Log.d(TAG, "Recording started")
-                }
-                is VideoRecordEvent.Finalize -> {
-                    isRecording = false
-                    if (recordEvent.hasError()) {
-                        Log.e(TAG, "Recording error: ${recordEvent.cause?.message}")
-                    } else {
-                        Log.d(TAG, "Recording saved to: ${recordEvent.outputResults.outputUri}")
+        val pending = recorder.prepareRecording(this, outputOptions)
+        recording =
+            (if (config.enableAudio) pending.withAudioEnabled() else pending)
+                .start(ContextCompat.getMainExecutor(this)) { event ->
+                    when (event) {
+                        is VideoRecordEvent.Start -> {
+                            val start = System.currentTimeMillis()
+                            RecordingRepository.onRecordingStarted(start, config.maxDurationMillis)
+                            notificationManager.notify(Constants.NOTIFICATION_ID, buildNotification(start))
+                        }
+                        is VideoRecordEvent.Finalize -> onFinalized(event)
+                        else -> Unit
                     }
-                    stopSelf()
                 }
-                is VideoRecordEvent.Status -> {
-                    // Update recording stats
-                }
-            }
-        }
     }
 
-    private fun startRecordingTimer() {
-        recordingJob = lifecycleScope.launch {
-            while (isActive) {
-                delay(1000)
-                val elapsed = System.currentTimeMillis() - recordingStartTime
-                val minutes = TimeUnit.MILLISECONDS.toMinutes(elapsed)
-                val seconds = TimeUnit.MILLISECONDS.toSeconds(elapsed) % 60
-                updateNotification(String.format("Recording... %02d:%02d", minutes, seconds))
-
-                // Check max duration
-                if (maxDurationMillis > 0 && elapsed >= maxDurationMillis) {
-                    stopRecordingVideo()
-                    break
-                }
+    private fun onFinalized(event: VideoRecordEvent.Finalize) {
+        finalizeTimeout?.cancel()
+        val error =
+            when (event.error) {
+                VideoRecordEvent.Finalize.ERROR_NONE,
+                // Reaching the user's own limit is a normal end, not a failure.
+                VideoRecordEvent.Finalize.ERROR_DURATION_LIMIT_REACHED,
+                -> null
+                VideoRecordEvent.Finalize.ERROR_INSUFFICIENT_STORAGE ->
+                    RecordingState.Error(RecordingState.Reason.NO_SPACE, event.cause?.message)
+                else -> RecordingState.Error(RecordingState.Reason.RECORDING_FAILED, event.cause?.message)
             }
-        }
+        if (error != null) Log.e(TAG, "Recording error ${event.error}", event.cause)
+        recording = null
+        RecordingRepository.onFinalized(error)
+        shutdown()
     }
 
     private fun stopRecordingVideo() {
-        recordingJob?.cancel()
-        recording?.stop()
+        RecordingRepository.onStopRequested()
+        val active = recording
+        if (active == null) {
+            // Still binding the camera: nothing to finalize.
+            RecordingRepository.onFinalized(null)
+            shutdown()
+            return
+        }
+        active.stop()
+        // Normally Finalize arrives within milliseconds; never hang in the foreground if it doesn't.
+        finalizeTimeout =
+            lifecycleScope.launch {
+                delay(FINALIZE_TIMEOUT_MS)
+                Log.w(TAG, "No Finalize after stop(); shutting down")
+                RecordingRepository.onFinalized(null)
+                shutdown()
+            }
+    }
+
+    private fun fail(
+        reason: RecordingState.Reason,
+        detail: String?,
+    ) {
+        recording?.close()
         recording = null
-        videoCapture = null
+        RecordingRepository.onError(RecordingState.Error(reason, detail))
+        shutdown()
+    }
+
+    private fun shutdown() {
         releaseWakeLock()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
+        val channel =
+            NotificationChannel(
                 Constants.NOTIFICATION_CHANNEL_ID,
-                Constants.NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW
+                getString(R.string.notification_channel_name),
+                NotificationManager.IMPORTANCE_LOW,
             ).apply {
-                description = "Shows recording status"
+                description = getString(R.string.notification_channel_description)
                 setShowBadge(false)
             }
-            notificationManager.createNotificationChannel(channel)
-        }
+        notificationManager.createNotificationChannel(channel)
     }
 
-    private fun createNotification(contentText: String): Notification {
-        val mainIntent = Intent(this, MainActivity::class.java)
-        val mainPendingIntent = PendingIntent.getActivity(
-            this, 0, mainIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val stopIntent = Intent(this, RecordingActionReceiver::class.java).apply {
-            action = Constants.ACTION_STOP_RECORDING
-        }
-        val stopPendingIntent = PendingIntent.getBroadcast(
-            this, 0, stopIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+    /**
+     * [startTime] null = still starting. Once recording, the system chronometer counts up from it,
+     * so the notification never has to be rebuilt every second.
+     */
+    private fun buildNotification(startTime: Long?): Notification {
+        val openApp =
+            PendingIntent.getActivity(
+                this,
+                0,
+                Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+        val stop =
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                Intent(this, RecordingActionReceiver::class.java).setAction(Constants.ACTION_STOP_RECORDING),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
 
         return NotificationCompat.Builder(this, Constants.NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("XCam")
-            .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(getString(if (startTime == null) R.string.notification_starting else R.string.notification_recording))
+            .setContentText(getString(R.string.notification_text))
+            .setColor(ContextCompat.getColor(this, R.color.brand_primary))
             .setOngoing(true)
-            .setContentIntent(mainPendingIntent)
-            .addAction(
-                android.R.drawable.ic_media_pause,
-                "Stop",
-                stopPendingIntent
-            )
+            .setOnlyAlertOnce(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+            .setContentIntent(openApp)
+            .apply {
+                if (startTime != null) {
+                    setWhen(startTime)
+                    setShowWhen(true)
+                    setUsesChronometer(true)
+                }
+            }
+            .addAction(R.drawable.ic_notification_stop, getString(R.string.action_stop), stop)
             .build()
-    }
-
-    private fun updateNotification(contentText: String) {
-        notificationManager.notify(Constants.NOTIFICATION_ID, createNotification(contentText))
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -307,10 +337,11 @@ class RecordingService : LifecycleService() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-        isRecording = false
-        recordingJob?.cancel()
+        finalizeTimeout?.cancel()
+        recording?.close()
+        recording = null
         releaseWakeLock()
-        Log.d(TAG, "Service destroyed")
+        RecordingRepository.onServiceDestroyed()
+        super.onDestroy()
     }
 }

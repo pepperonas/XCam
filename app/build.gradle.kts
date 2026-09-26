@@ -1,3 +1,14 @@
+import java.util.Properties
+
+// Release signing: keystore.properties + release.jks in the project root locally (both gitignored;
+// backup in the private repo pepperonas/keystore under x-cam-keystore/), or KEYSTORE_* env vars in CI.
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps =
+    Properties().apply {
+        if (keystorePropsFile.exists()) keystorePropsFile.inputStream().use { load(it) }
+    }
+val hasSigning = keystorePropsFile.exists() || System.getenv("KEYSTORE_PASSWORD") != null
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,16 +17,34 @@ plugins {
 
 android {
     namespace = "io.celox.xcam"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "io.celox.xcam"
         minSdk = 33
-        targetSdk = 34
-        versionCode = 9
-        versionName = "2.0"
+        targetSdk = 35
+        versionCode = 10
+        versionName = "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (hasSigning) {
+            create("release") {
+                if (keystorePropsFile.exists()) {
+                    storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                    storePassword = keystoreProps.getProperty("storePassword")
+                    keyAlias = keystoreProps.getProperty("keyAlias")
+                    keyPassword = keystoreProps.getProperty("keyPassword")
+                } else {
+                    storeFile = rootProject.file(System.getenv("KEYSTORE_FILE") ?: "release.jks")
+                    storePassword = System.getenv("KEYSTORE_PASSWORD")
+                    keyAlias = System.getenv("KEY_ALIAS")
+                    keyPassword = System.getenv("KEY_PASSWORD")
+                }
+            }
+        }
     }
 
     buildTypes {
@@ -42,6 +71,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (hasSigning) signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -60,70 +90,62 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+        // Opt in once for the whole module instead of @OptIn on every call site
+        // (Material 3 Expressive APIs are still experimental in 1.5.0-alpha).
+        freeCompilerArgs += listOf(
+            "-opt-in=kotlin.RequiresOptIn",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+        )
+    }
+    testOptions {
+        // Robolectric reads resources (strings, drawables) in the unit tests.
+        unitTests.isIncludeAndroidResources = true
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
-    // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.service)
     implementation(libs.androidx.activity.compose)
 
-    // Compose
-    implementation(platform(libs.androidx.compose.bom))
+    // Compose + Material 3 Expressive (pinned, see libs.versions.toml)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    // Using custom vector icons instead of extended library (saves ~10-15 MB)
-    implementation("androidx.navigation:navigation-compose:2.7.5")
-
-    // Splash Screen
-    implementation("androidx.core:core-splashscreen:1.0.1")
-
-    // Image loading with video thumbnail support
-    implementation("io.coil-kt:coil-compose:2.5.0")
-    implementation("io.coil-kt:coil-video:2.5.0")
-
-    // Media3 ExoPlayer for video playback
-    implementation("androidx.media3:media3-exoplayer:1.2.0")
-    implementation("androidx.media3:media3-ui:1.2.0")
-
-    // Compose Foundation (for HorizontalPager)
-    implementation("androidx.compose.foundation:foundation:1.6.0")
+    implementation(libs.androidx.navigation.compose)
+    // Shape morphing for the record button (RoundedPolygon / Morph)
+    implementation(libs.androidx.graphics.shapes)
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.guava)
 
     // CameraX (only required modules)
-    implementation("androidx.camera:camera-camera2:1.3.0")
-    implementation("androidx.camera:camera-lifecycle:1.3.0")
-    implementation("androidx.camera:camera-video:1.3.0")
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.video)
 
-    // Lifecycle
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-service:2.6.2")
+    // Playback + thumbnails
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.video)
 
-    // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-
-    // Permissions
-    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
-
-    // DataStore for preferences
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-
-    // Testing
     testImplementation(libs.junit)
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("org.robolectric:robolectric:4.11.1")
-    testImplementation("androidx.test:core:1.5.0")
-    testImplementation("androidx.test.ext:junit:1.1.5")
-    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

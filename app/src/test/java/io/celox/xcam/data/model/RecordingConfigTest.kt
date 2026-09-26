@@ -1,64 +1,36 @@
 package io.celox.xcam.data.model
 
-import org.junit.Assert.*
+import androidx.camera.core.CameraSelector
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RecordingConfigTest {
-
     @Test
-    fun `default config has sensible values`() {
+    fun `default config records 1080p with audio from the back camera, unlimited`() {
         val config = RecordingConfig()
+        assertEquals(CameraSelector.LENS_FACING_BACK, config.cameraLens)
         assertEquals(VideoQuality.HD_1080P, config.videoQuality)
         assertTrue(config.enableAudio)
-        assertEquals(0, config.maxDurationMinutes) // unlimited
-        assertTrue(config.stopAtLowBattery)
-        assertEquals(10, config.lowBatteryThreshold)
-    }
-
-    @Test
-    fun `copy preserves unchanged fields`() {
-        val original = RecordingConfig()
-        val modified = original.copy(videoQuality = VideoQuality.UHD_4K)
-        assertEquals(VideoQuality.UHD_4K, modified.videoQuality)
-        assertEquals(original.enableAudio, modified.enableAudio)
-        assertEquals(original.maxDurationMinutes, modified.maxDurationMinutes)
-        assertEquals(original.stopAtLowBattery, modified.stopAtLowBattery)
-        assertEquals(original.lowBatteryThreshold, modified.lowBatteryThreshold)
-    }
-
-    @Test
-    fun `maxDuration zero means unlimited`() {
-        val config = RecordingConfig(maxDurationMinutes = 0)
         assertEquals(0, config.maxDurationMinutes)
     }
 
     @Test
-    fun `custom config values are preserved`() {
-        val config = RecordingConfig(
-            videoQuality = VideoQuality.HD_720P,
-            enableAudio = false,
-            maxDurationMinutes = 30,
-            stopAtLowBattery = false,
-            lowBatteryThreshold = 20
-        )
-        assertEquals(VideoQuality.HD_720P, config.videoQuality)
-        assertFalse(config.enableAudio)
-        assertEquals(30, config.maxDurationMinutes)
-        assertFalse(config.stopAtLowBattery)
-        assertEquals(20, config.lowBatteryThreshold)
+    fun `maxDurationMillis converts minutes`() {
+        assertEquals(0L, RecordingConfig(maxDurationMinutes = 0).maxDurationMillis)
+        assertEquals(15 * 60_000L, RecordingConfig(maxDurationMinutes = 15).maxDurationMillis)
     }
 
     @Test
-    fun `equality works for identical configs`() {
-        val config1 = RecordingConfig(videoQuality = VideoQuality.HD_1080P, enableAudio = true)
-        val config2 = RecordingConfig(videoQuality = VideoQuality.HD_1080P, enableAudio = true)
-        assertEquals(config1, config2)
+    fun `duration options start with unlimited and ascend`() {
+        val options = RecordingConfig.MAX_DURATION_OPTIONS
+        assertEquals(0, options.first())
+        assertEquals(options.sorted(), options)
+        assertEquals(options.size, options.toSet().size)
     }
 
     @Test
-    fun `inequality for different configs`() {
-        val config1 = RecordingConfig(enableAudio = true)
-        val config2 = RecordingConfig(enableAudio = false)
-        assertNotEquals(config1, config2)
+    fun `the default duration is one of the offered options`() {
+        assertTrue(RecordingConfig().maxDurationMinutes in RecordingConfig.MAX_DURATION_OPTIONS)
     }
 }

@@ -6,12 +6,14 @@ import android.content.Intent
 import io.celox.xcam.service.RecordingService
 import io.celox.xcam.util.Constants
 
+/** Handles the notification's "Stop" action. */
 class RecordingActionReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
-        when (intent.action) {
-            Constants.ACTION_STOP_RECORDING -> {
-                RecordingService.stopRecording(context)
-            }
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
+        if (intent.action == Constants.ACTION_STOP_RECORDING) {
+            RecordingService.stopRecording(context)
         }
     }
 }

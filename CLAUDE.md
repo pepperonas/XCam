@@ -4,79 +4,75 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-XCam is a native Android app (Kotlin) for background video recording with the screen off. Targets Android 13+ (API 33+), ARM64 only. Package: `io.celox.xcam`.
+XCam is a native Android app (Kotlin, Jetpack Compose) for background video recording with the screen off. Android 13+ (minSdk 33), ARM64 only. Package: `io.celox.xcam`. Product page: https://x-cam.celox.io (alias xcam.celox.io), built from `website/`.
 
 ## Build & Test Commands
 
 ```bash
-# Build
 ./gradlew assembleDebug           # Debug APK (no minification)
-./gradlew assembleReleaseDebug    # Release-like APK with debug signing (R8 minified)
-./gradlew assembleRelease         # Release APK (requires signing config)
-./gradlew installDebug            # Build and install on connected device
+./gradlew assembleRelease         # Signed release APK (keystore.properties + release.jks in the root, or KEYSTORE_* env)
+./gradlew assembleReleaseDebug    # R8 build with debug signing
+./gradlew installDebug
 
-# Test
-./gradlew testDebugUnitTest       # Run all 43 unit tests
-./gradlew testDebugUnitTest --tests "io.celox.xcam.data.model.VideoFileTest"        # Run single test class
-./gradlew testDebugUnitTest --tests "io.celox.xcam.data.model.VideoFileTest.sizeInMB*"  # Run single test method
+./gradlew testDebugUnitTest       # 50 unit tests (JVM + Robolectric)
+./gradlew testDebugUnitTest --tests "io.celox.xcam.data.RecordingRepositoryTest"
+./gradlew testDebugUnitTest --tests "io.celox.xcam.util.TimeFormatTest.the*"
 
-# Lint
-./gradlew lintDebug               # Android lint (CI enforces 0 errors)
-
-# Combined (matches CI pipeline)
-./gradlew testDebugUnitTest lintDebug assembleDebug
+./gradlew lintDebug               # CI enforces 0 errors
 ```
 
-Test reports: `app/build/reports/tests/testDebugUnitTest/index.html`
-Lint report: `app/build/reports/lint-results-debug.html`
+- **R8 needs a 6 GB Gradle heap** (`gradle.properties`); with 4 GB `minifyReleaseWithR8` dies with "GC is thrashing". On a loaded machine add `--max-workers=1`.
+- **No Compose BOM:** Compose `1.11.0-beta02` + material3 `1.5.0-alpha18` are pinned in `gradle/libs.versions.toml` (same set as flipper-the-ripper) because the M3 Expressive APIs only exist in the alpha line. `ExperimentalMaterial3ExpressiveApi`/`ExperimentalMaterial3Api` are opted in module-wide via `freeCompilerArgs` — no `@OptIn` at call sites. material3 1.5 no longer pulls in `material-icons-core`: icons come from `ui/icons/XIcons.kt` (Material path data; outlined variants are strokes of the filled path).
+- Remaining lint warnings are version notices for the deliberately pinned alphas.
 
-## CI/CD
+## Releases & signing
 
-GitHub Actions (`.github/workflows/ci.yml`): runs on push to `main` and PRs. Three jobs: Unit Tests, Lint Check, Build APK (depends on test+lint). Release workflow (`.github/workflows/build-apk.yml`) triggers on `v*` tags.
+- Tag `vX.Y.Z` → `.github/workflows/release.yml`: checks tag == `versionName`, cuts the `## [X.Y.Z]` section from `CHANGELOG.md` as release notes (`scripts/release-notes.sh`; a missing section fails the run), runs tests, builds the signed APK, **verifies the certificate SHA-256** (`78f163f0…cf38`) and publishes `xcam-vX.Y.Z.apk` + `SHA256SUMS.txt`.
+- Signing key: alias `xcam`, backup and passwords in the private repo `pepperonas/keystore` (`x-cam-keystore/`). Local `release.jks`/`keystore.properties` are gitignored. CI secrets: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
+- 3.0.0 switched from the debug key to this release key: 2.x installs cannot be updated in place (documented in CHANGELOG/README/website).
+- `ci.yml` (push/PR to main): unit tests, lint, debug build.
 
 ## Architecture
 
-MVVM with Jetpack Compose, no DI framework. Single shared `RecordingViewModel` (AndroidViewModel) created in `MainActivity` and passed to all screens.
+MVVM with Compose, no DI. One `RecordingViewModel` (AndroidViewModel), obtained in `MainActivity` via `viewModels()` and passed down.
 
-### Key State Flows
+### Recording state — the service is the single source of truth
 
-- `recordingState: StateFlow<RecordingState>` — sealed class: Idle, Starting, Recording(startTime, outputPath), Stopping, Error(message)
-- `recordingConfig: StateFlow<RecordingConfig>` — camera lens, quality, audio, duration, battery settings
-- `videoFiles: StateFlow<List<VideoFile>>` — scanned from `/Movies/XCam/` with duration metadata
-- `hasCompletedOnboarding: StateFlow<Boolean>` — backed by DataStore via `PreferencesManager`
+`data/RecordingRepository` is a process-wide object with `StateFlow<RecordingState>` (+ a `finalized` counter). **Only `RecordingService` writes it**, from real CameraX events: `Starting` on request (`onStartRequested` also refuses a second start), `Recording(startTime, maxDurationMillis)` on `VideoRecordEvent.Start`, `Idle`/`Error(reason)` on `Finalize` (`ERROR_DURATION_LIMIT_REACHED` counts as a normal end), `Idle` in `onDestroy`. The UI never guesses — do not reintroduce timed state changes in the ViewModel.
 
-### Navigation
+- Stop flow: `stopRecordingVideo()` calls `recording.stop()` and waits for `Finalize` (5 s fallback) before `stopForeground`/`stopSelf`.
+- Max duration is enforced by CameraX (`MediaStoreOutputOptions.setDurationLimitMillis`), passed via `EXTRA_MAX_DURATION_MS`.
+- Notification uses the system chronometer (`setUsesChronometer`), not a per-second rebuild. Stop action → `RecordingActionReceiver`.
+- `startRecording(audioAllowed)` drops audio when RECORD_AUDIO is missing (CameraX `withAudioEnabled()` would throw).
+- `QualitySelector` has a fallback to lower quality.
 
-String routes in `MainActivity.XCamApp()`: `"onboarding"` → `"main"` → `"settings"` / `"videos"` → `"player/{videoIndex}"`. Start destination is dynamic based on onboarding state.
+### Data
 
-### Recording Pipeline
+- **Settings:** `PreferencesManager` (DataStore) → `AppSettings` (onboarding, `RecordingConfig`, `ThemeMode`, dynamic colour). Decoding lives in the pure `ConfigPrefs.decode` (unknown values fall back to defaults; unit-tested). `viewModel.settings` is `null` until DataStore answered — the splash screen stays up until then (`setKeepOnScreenCondition`).
+- **Videos:** `VideoRepository` queries MediaStore (`RELATIVE_PATH LIKE 'Movies/XCam/%'`), observes changes with a `ContentObserver`, deletes via `contentResolver.delete` with a `createDeleteRequest` fallback (emitted as `UiEvent.ConfirmDelete`). Without `READ_MEDIA_VIDEO` MediaStore only returns files this install created — after a reinstall older recordings are hidden, so the Videos tab offers the optional media permission (`Permissions.media`). Sharing uses the content URIs directly (`util/Share.kt`, no FileProvider).
+- `groupByDay` (pure, clock as parameter) builds the Today/Yesterday/date sections.
 
-`RecordingViewModel.startRecording()` → `RecordingService.startRecording(context, config)` (static helper, starts foreground service via Intent) → CameraX `VideoCapture`/`Recorder` → saves to MediaStore `Movies/XCam/`. Service is a `LifecycleService` with wake lock + notification with stop action. Config is passed through Intent extras. Recording state is communicated via `RecordingService.isRecording` companion object flag (polled by ViewModel).
+### UI
 
-### UI Layer
+- `ui/XCamApp.kt`: outer `Scaffold` (`contentWindowInsets = WindowInsets(0)`) with an M3 Expressive `ShortNavigationBar` (Record · Videos · Settings, hidden on player/onboarding) and a `NavHost` padded + `consumeWindowInsets`. Tab changes go through `navigateToTab()`. Routes in `ui/navigation/Destination.kt`; player is `player/{id}` (MediaStore id).
+- Theme: `ui/theme/Theme.kt` uses `MaterialExpressiveTheme` + `MotionScheme.expressive()`. `Color.kt` is **generated** by `tools/color-scheme.mjs` from seed `#E5484D` (accents from SchemeVibrant, neutrals from SchemeTonalSpot) — regenerate, don't hand-edit. `Shape.kt`/`Dimens.kt` = spacing/shape scales.
+- Motion: all animation specs come from `MaterialTheme.motionScheme` (spatial springs move, effects springs fade — effects never overshoot). `ui/motion/`: `rememberReduceMotion()` (every custom animation checks it), `springEntrance`, `ScreenTransitions` (tab fade-through / child rise, ported from flipper), `MorphShape` + `rememberMorph` (graphics-shapes `Morph`). **Inside `transitionSpec` lambdas `MaterialTheme` is not accessible** — read `val motion = MaterialTheme.motionScheme` in the composable first.
+- Signature component: `RecordHero` in `ui/record/RecordScreen.kt` morphs `MaterialShapes.Cookie9Sided` ↔ `Square`, with a `CircularWavyProgressIndicator` ring (determinate with a limit). Timer uses `RollingText` (per-character `AnimatedContent`, keyed from the right).
+- `ui/components`: `SegmentedToggle`, `springPressed`, `ExpressiveLoadingIndicator`, `Haptics` (semantic constants; API-34 constants fall back to `CLOCK_TICK` on 33), `SectionCard`, `VideoThumbnail` (Coil `VideoFrameDecoder`, loader in `XCamApplication`).
+- Strings: all UI text in `res/values/strings.xml` + `values-de`; `StringsParityTest` fails on a missing translation or mismatched format args. Per-app language via `xml/locales_config.xml`.
 
-- Dark theme with amber/orange accents (`ui/theme/`)
-- Custom vector icons in `ui/icons/CustomIcons.kt` (replaces Material Extended Icons, saves ~10-15 MB)
-- Reusable components in `ui/components/Components.kt`: GlassmorphicCard, AnimatedRecordButton, AnimatedRecordingIndicator, StatusChip, ShimmerEffect
-- Video playback: Media3 ExoPlayer in `VideoPlayerScreen`
-- Video thumbnails: Coil with `VideoFrameDecoder` in `VideosScreen`
-- Inter font family bundled in `res/font/` (4 weights)
+## App icon
 
-### Dependencies
+Vector adaptive icon (`mipmap-anydpi-v26`) with a monochrome layer. Geometry (nine-lobed cookie with the camera + record dot as an evenOdd hole) is generated by `tools/icon_geometry.py` — the same path feeds launcher foreground/monochrome, `ic_app_mark`, `ic_splash_icon`, `ic_notification` and `website/art/mark.svg`. `LauncherIconTest` pins the safe-zone radius (≤ 33) and foreground == monochrome geometry. (Renaming the folder to `mipmap-anydpi` broke AAPT resolution — keep `-v26`.)
 
-Version catalog at `gradle/libs.versions.toml` for core deps (Compose BOM, core-ktx, JUnit). Many deps declared inline in `app/build.gradle.kts`: CameraX 1.3, Media3 1.2, Coil 2.5, Navigation Compose 2.7, Accompanist Permissions 0.32, DataStore 1.0, Compose Foundation 1.6, SplashScreen 1.0.
+## Tests
 
-## Build Variants
+`app/src/test`: model/state/config tests, `RecordingRepositoryTest`, `ConfigPrefsTest`, `VideoGroupsTest` + `VideoFileTest` (Robolectric, need `android.net.Uri`), `TimeFormatTest`, `ThemeTokensTest` (WCAG AA on every on-colour pair, both schemes), `ScreenMotionTest`, `LauncherIconTest`, `StringsParityTest` (file-based, run from the module dir). Each was mutation-checked once when written.
 
-- **debug**: No minification
-- **releaseDebug**: R8 minified + shrunk, debug signing (test release behavior without signing config)
-- **release**: R8 minified + shrunk, requires release signing config
+## Website
 
-## Lint Suppressions
-
-- `@SuppressLint("MissingPermission")` on `RecordingService.startRecordingToFile()` — permissions are verified before service starts
-- `@Suppress("UnsafeOptInUsageError")` on `PlayerView.setShowBuffering()` in `VideoPlayerScreen` — Media3 unstable API
+`website/` is generated by the product-page kit (`~/claude/_templates/apps/product-page`): edit `website/make_site_json.py` (5 languages side by side) → `python3 website/make_site_json.py` → `build.py website/site.json website --hero website/art/hero.png --screens website/art/screens.png --icon website/art/mark.svg --force` → `build.py --check website`. Hero is rendered from `website/art/hero.html` with headless Chrome; the screenshot strip via `tools/mockups.py`. The server timer updates version/checksums from GitHub Releases by itself — no deploy per release. Deploy: `website/deploy.sh` (see `website/README.md`).
 
 ## Key Constants
 
-All intent actions, extras, notification IDs, and storage paths centralized in `util/Constants.kt`. Videos stored at `Movies/XCam/*.mp4`.
+Intent actions/extras, notification id, `RELATIVE_VIDEO_PATH` (`Movies/XCam/`, trailing slash matters for the LIKE query) in `util/Constants.kt`.

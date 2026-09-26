@@ -1,53 +1,40 @@
 package io.celox.xcam.data.model
 
-import org.junit.Assert.*
+import androidx.camera.core.CameraSelector
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class VideoQualityTest {
-
     @Test
-    fun `HD_720P has correct properties`() {
-        val quality = VideoQuality.HD_720P
-        assertEquals("720p HD", quality.displayName)
-        assertEquals(1280, quality.width)
-        assertEquals(720, quality.height)
-    }
-
-    @Test
-    fun `HD_1080P has correct properties`() {
-        val quality = VideoQuality.HD_1080P
-        assertEquals("1080p Full HD", quality.displayName)
-        assertEquals(1920, quality.width)
-        assertEquals(1080, quality.height)
-    }
-
-    @Test
-    fun `UHD_4K has correct properties`() {
-        val quality = VideoQuality.UHD_4K
-        assertEquals("4K Ultra HD", quality.displayName)
-        assertEquals(3840, quality.width)
-        assertEquals(2160, quality.height)
-    }
-
-    @Test
-    fun `all quality levels are present`() {
+    fun `qualities ascend by resolution`() {
         val values = VideoQuality.entries
         assertEquals(3, values.size)
+        assertTrue(values.zipWithNext().all { (a, b) -> a.width < b.width && a.height < b.height })
     }
 
     @Test
-    fun `quality values are ordered by resolution ascending`() {
-        val values = VideoQuality.entries
-        assertTrue(values[0].width < values[1].width)
-        assertTrue(values[1].width < values[2].width)
-        assertTrue(values[0].height < values[1].height)
-        assertTrue(values[1].height < values[2].height)
+    fun `resolutions are the standard sizes`() {
+        assertEquals(1280 to 720, VideoQuality.HD_720P.width to VideoQuality.HD_720P.height)
+        assertEquals(1920 to 1080, VideoQuality.HD_1080P.width to VideoQuality.HD_1080P.height)
+        assertEquals(3840 to 2160, VideoQuality.UHD_4K.width to VideoQuality.UHD_4K.height)
     }
 
     @Test
-    fun `valueOf returns correct enum`() {
-        assertEquals(VideoQuality.HD_720P, VideoQuality.valueOf("HD_720P"))
-        assertEquals(VideoQuality.HD_1080P, VideoQuality.valueOf("HD_1080P"))
-        assertEquals(VideoQuality.UHD_4K, VideoQuality.valueOf("UHD_4K"))
+    fun `fromName round-trips every quality`() {
+        VideoQuality.entries.forEach { assertEquals(it, VideoQuality.fromName(it.name)) }
+    }
+
+    @Test
+    fun `fromName falls back to 1080p for unknown or missing values`() {
+        assertEquals(VideoQuality.HD_1080P, VideoQuality.fromName(null))
+        assertEquals(VideoQuality.HD_1080P, VideoQuality.fromName("HD_480P"))
+    }
+
+    @Test
+    fun `lens lookup maps selectors and falls back to back`() {
+        assertEquals(CameraLens.FRONT, CameraLens.fromSelector(CameraSelector.LENS_FACING_FRONT))
+        assertEquals(CameraLens.BACK, CameraLens.fromSelector(CameraSelector.LENS_FACING_BACK))
+        assertEquals(CameraLens.BACK, CameraLens.fromSelector(99))
     }
 }

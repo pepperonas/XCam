@@ -1,149 +1,52 @@
 package io.celox.xcam.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
-import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
-
-// =============================================================================
-// XCam Professional Dark & Amber Theme
-// =============================================================================
+import io.celox.xcam.data.model.ThemeMode
 
 /**
- * Custom Dark Color Scheme - Primary theme for XCam
- * Features: Amber/Orange primary color on dark surfaces
+ * Material 3 **Expressive** theme: the spring-based [MotionScheme.expressive] physics (every
+ * component and every custom animation in the app reads `MaterialTheme.motionScheme`), the XCam
+ * brand colours, and — opt-in — the wallpaper colours (Material You). minSdk 33, so dynamic colour
+ * is always available.
  */
-private val XCamDarkColorScheme = darkColorScheme(
-    // Primary colors
-    primary = Amber40,
-    onPrimary = Color.White,
-    primaryContainer = Amber30,
-    onPrimaryContainer = Amber80,
-
-    // Secondary colors
-    secondary = Gray60,
-    onSecondary = Gray90,
-    secondaryContainer = Gray40,
-    onSecondaryContainer = Gray80,
-
-    // Tertiary colors
-    tertiary = RecordingAmber,
-    onTertiary = Color.Black,
-    tertiaryContainer = Amber20,
-    onTertiaryContainer = Amber80,
-
-    // Background & Surface
-    background = DarkBackground,
-    onBackground = OnDarkSurface,
-    surface = DarkSurface,
-    onSurface = OnDarkSurface,
-    surfaceVariant = DarkSurfaceVariant,
-    onSurfaceVariant = OnDarkSurfaceVariant,
-
-    // Other semantic colors
-    error = ErrorRed,
-    onError = Color.Black,
-    errorContainer = Amber30,
-    onErrorContainer = Amber80,
-
-    outline = Gray40,
-    outlineVariant = Gray20,
-    inverseSurface = Gray90,
-    inverseOnSurface = DarkSurface,
-    inversePrimary = Amber30,
-
-    surfaceTint = Amber40
-)
-
-/**
- * Light Color Scheme - For users who prefer light mode
- */
-private val XCamLightColorScheme = lightColorScheme(
-    primary = Amber40,
-    onPrimary = Color.White,
-    primaryContainer = Amber80,
-    onPrimaryContainer = Amber20,
-
-    secondary = Gray60,
-    onSecondary = Color.White,
-    secondaryContainer = Gray80,
-    onSecondaryContainer = Gray20,
-
-    tertiary = RecordingAmber,
-    onTertiary = Color.Black,
-
-    background = Color(0xFFFFFBFE),
-    onBackground = Color(0xFF1C1B1F),
-    surface = Color(0xFFFFFBFE),
-    onSurface = Color(0xFF1C1B1F),
-    surfaceVariant = Color(0xFFE7E0EC),
-    onSurfaceVariant = Color(0xFF49454F),
-
-    error = Color(0xFFB3261E),
-    onError = Color.White,
-
-    outline = Gray40,
-    outlineVariant = Gray80
-)
-
-/**
- * Custom Shape System for XCam
- */
-val XCamShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(24.dp)
-)
-
 @Composable
 fun XCamTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    // Set to false to always use our custom amber theme
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
     dynamicColor: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val dark = isDarkTheme(themeMode)
+    val context = LocalContext.current
+    val colorScheme: ColorScheme =
+        when {
+            dynamicColor -> if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            dark -> XCamDarkColors
+            else -> XCamLightColors
         }
-        darkTheme -> XCamDarkColorScheme
-        else -> XCamLightColorScheme
-    }
 
-    // Update system bars to match theme
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as? android.app.Activity)?.window
-            window?.let {
-                WindowCompat.getInsetsController(it, view).apply {
-                    isAppearanceLightStatusBars = !darkTheme
-                    isAppearanceLightNavigationBars = !darkTheme
-                }
-            }
-        }
-    }
-
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        motionScheme = MotionScheme.expressive(),
         shapes = XCamShapes,
-        content = content
+        content = content,
     )
 }
+
+/**
+ * Whether the app renders dark for [themeMode]. Also drives the system-bar icon colour in
+ * `MainActivity`: the bar icons must follow the *app's* choice, not the OS.
+ */
+@Composable
+fun isDarkTheme(themeMode: ThemeMode): Boolean =
+    when (themeMode) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }

@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="amber_primary">#FFFF9100</color>
-    <color name="amber_dark">#FFE65100</color>
-    <color name="dark_background">#FF0A0A0A</color>
-    <color name="dark_surface">#FF121212</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Brand tones for XML-only surfaces (splash, notification accent, launcher). The Compose
+         theme is generated separately: ui/theme/Color.kt. -->
+    <color name="brand_primary">#FFBF0025</color>
+    <color name="splash_background">#FFFFF8F7</color>
 </resources>

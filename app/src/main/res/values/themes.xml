@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.XCam" parent="android:Theme.Material.NoActionBar">
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
+    <!-- Window theme behind Compose. Edge-to-edge and bar colours are set by MainActivity. -->
+    <style name="Theme.XCam" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
     </style>
 
-    <style name="Theme.XCam.Splash" parent="Theme.XCam">
-        <item name="android:windowSplashScreenBackground">@color/dark_background</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+    <!-- Launch theme: shown until DataStore has answered (setKeepOnScreenCondition), then
+         installSplashScreen() swaps to postSplashScreenTheme. -->
+    <style name="Theme.XCam.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.XCam</item>
     </style>
 
 </resources>

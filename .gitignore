@@ -13,3 +13,13 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Release signing (backup: private repo pepperonas/keystore, x-cam-keystore/)
+*.jks
+*.keystore
+keystore.properties
+
+# Local tool output
+/.playwright-mcp
+/tools/node_modules
+__pycache__/

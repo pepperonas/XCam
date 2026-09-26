@@ -1,61 +1,39 @@
 package io.celox.xcam.util
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ConstantsTest {
-
     @Test
-    fun `notification channel ID is not empty`() {
-        assertTrue(Constants.NOTIFICATION_CHANNEL_ID.isNotBlank())
+    fun `actions are namespaced and unique`() {
+        val actions = listOf(Constants.ACTION_START_RECORDING, Constants.ACTION_STOP_RECORDING)
+        assertTrue(actions.all { it.startsWith("io.celox.xcam.") })
+        assertEquals(actions.size, actions.toSet().size)
     }
 
     @Test
-    fun `notification ID is positive`() {
+    fun `extras are unique`() {
+        val extras =
+            listOf(
+                Constants.EXTRA_CAMERA_LENS,
+                Constants.EXTRA_VIDEO_QUALITY,
+                Constants.EXTRA_ENABLE_AUDIO,
+                Constants.EXTRA_MAX_DURATION_MS,
+            )
+        assertEquals(extras.size, extras.toSet().size)
+    }
+
+    @Test
+    fun `recordings live in Movies XCam, with the trailing slash MediaStore stores`() {
+        // The video list queries RELATIVE_PATH LIKE '<path>%'; without the slash, "Movies/XCamera/"
+        // of another app would match too.
+        assertEquals("Movies/XCam/", Constants.RELATIVE_VIDEO_PATH)
+        assertTrue(Constants.RELATIVE_VIDEO_PATH.endsWith("/"))
+    }
+
+    @Test
+    fun `notification id is positive`() {
         assertTrue(Constants.NOTIFICATION_ID > 0)
-    }
-
-    @Test
-    fun `actions have correct package prefix`() {
-        assertTrue(Constants.ACTION_START_RECORDING.startsWith("io.celox.xcam."))
-        assertTrue(Constants.ACTION_STOP_RECORDING.startsWith("io.celox.xcam."))
-        assertTrue(Constants.ACTION_PAUSE_RECORDING.startsWith("io.celox.xcam."))
-    }
-
-    @Test
-    fun `actions are unique`() {
-        val actions = setOf(
-            Constants.ACTION_START_RECORDING,
-            Constants.ACTION_STOP_RECORDING,
-            Constants.ACTION_PAUSE_RECORDING
-        )
-        assertEquals(3, actions.size)
-    }
-
-    @Test
-    fun `video directory is XCam`() {
-        assertEquals("XCam", Constants.VIDEO_DIRECTORY)
-    }
-
-    @Test
-    fun `video file extension is mp4`() {
-        assertEquals(".mp4", Constants.VIDEO_FILE_EXTENSION)
-    }
-
-    @Test
-    fun `video file prefix is VID_`() {
-        assertEquals("VID_", Constants.VIDEO_FILE_PREFIX)
-    }
-
-    @Test
-    fun `wake lock tag contains app name`() {
-        assertTrue(Constants.WAKE_LOCK_TAG.contains("XCam"))
-    }
-
-    @Test
-    fun `extras are not empty`() {
-        assertTrue(Constants.EXTRA_CAMERA_LENS.isNotBlank())
-        assertTrue(Constants.EXTRA_VIDEO_QUALITY.isNotBlank())
-        assertTrue(Constants.EXTRA_ENABLE_AUDIO.isNotBlank())
     }
 }
