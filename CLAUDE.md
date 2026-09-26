@@ -21,7 +21,7 @@ XCam is a native Android app (Kotlin, Jetpack Compose) for background video reco
 ./gradlew lintDebug               # CI enforces 0 errors
 ```
 
-- **R8 needs a 6 GB Gradle heap** (`gradle.properties`); with 4 GB `minifyReleaseWithR8` dies with "GC is thrashing". On a loaded machine add `--max-workers=1`.
+- **R8 needs a 6 GB Gradle heap** (`gradle.properties`); with 4 GB `minifyReleaseWithR8` dies with "GC is thrashing". With 2+ workers R8 and `lintVitalAnalyzeRelease` run in parallel and exhaust even 6 GB (`OutOfMemoryError`) — use `--max-workers=1`. When the Mac is swapping heavily (other sessions), even that can fail; the authoritative signed APK is the one the release workflow builds on GitHub, so a local release build is optional.
 - **No Compose BOM:** Compose `1.11.0-beta02` + material3 `1.5.0-alpha18` are pinned in `gradle/libs.versions.toml` (same set as flipper-the-ripper) because the M3 Expressive APIs only exist in the alpha line. `ExperimentalMaterial3ExpressiveApi`/`ExperimentalMaterial3Api` are opted in module-wide via `freeCompilerArgs` — no `@OptIn` at call sites. material3 1.5 no longer pulls in `material-icons-core`: icons come from `ui/icons/XIcons.kt` (Material path data; outlined variants are strokes of the filled path).
 - Remaining lint warnings are version notices for the deliberately pinned alphas.
 
