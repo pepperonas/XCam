@@ -12,6 +12,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import io.celox.xcam.data.model.RecordingConfig
 import io.celox.xcam.data.model.ThemeMode
 import io.celox.xcam.data.model.VideoQuality
+import io.celox.xcam.data.update.AppUpdate
+import androidx.datastore.preferences.core.longPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -23,6 +25,10 @@ data class AppSettings(
     val recording: RecordingConfig = RecordingConfig(),
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = false,
+    /** Check x-cam.celox.io for new releases (the app's only network access). On by default. */
+    val updateChecks: Boolean = true,
+    /** The newest release the last check found — shown in the app while it is newer than this build. */
+    val knownUpdate: AppUpdate? = null,
 )
 
 /**
@@ -39,6 +45,9 @@ object ConfigPrefs {
         maxMinutes: Int?,
         theme: String?,
         dynamic: Boolean?,
+        updateChecks: Boolean? = null,
+        knownVersion: String? = null,
+        knownNotes: String? = null,
     ): AppSettings {
         val defaults = AppSettings()
         return AppSettings(
@@ -56,6 +65,13 @@ object ConfigPrefs {
             ),
             themeMode = ThemeMode.entries.firstOrNull { it.name == theme } ?: defaults.themeMode,
             dynamicColor = dynamic ?: defaults.dynamicColor,
+            updateChecks = updateChecks ?: defaults.updateChecks,
+            knownUpdate =
+            if (!knownVersion.isNullOrBlank() && knownNotes?.startsWith("https://") == true) {
+                AppUpdate(knownVersion, knownNotes)
+            } else {
+                null
+            },
         )
     }
 }
@@ -69,6 +85,11 @@ class PreferencesManager(private val context: Context) {
         val MAX_DURATION = intPreferencesKey("max_duration_minutes")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
+        val UPDATE_CHECKS = booleanPreferencesKey("update_checks")
+        val KNOWN_UPDATE_VERSION = stringPreferencesKey("known_update_version")
+        val KNOWN_UPDATE_NOTES = stringPreferencesKey("known_update_notes")
+        val NOTIFIED_UPDATE_VERSION = stringPreferencesKey("notified_update_version")
+        val LAST_UPDATE_CHECK = longPreferencesKey("last_update_check_ms")
     }
 
     val settings: Flow<AppSettings> =
@@ -81,6 +102,9 @@ class PreferencesManager(private val context: Context) {
                 maxMinutes = p[MAX_DURATION],
                 theme = p[THEME_MODE],
                 dynamic = p[DYNAMIC_COLOR],
+                updateChecks = p[UPDATE_CHECKS],
+                knownVersion = p[KNOWN_UPDATE_VERSION],
+                knownNotes = p[KNOWN_UPDATE_NOTES],
             )
         }
 
@@ -97,4 +121,21 @@ class PreferencesManager(private val context: Context) {
     suspend fun setThemeMode(mode: ThemeMode) = context.dataStore.edit { it[THEME_MODE] = mode.name }
 
     suspend fun setDynamicColor(enabled: Boolean) = context.dataStore.edit { it[DYNAMIC_COLOR] = enabled }
+
+    suspend fun setUpdateChecks(enabled: Boolean) = context.dataStore.edit { it[UPDATE_CHECKS] = enabled }
+
+    suspend fun setKnownUpdate(update: AppUpdate) =
+        context.dataStore.edit {
+            it[KNOWN_UPDATE_VERSION] = update.version
+            it[KNOWN_UPDATE_NOTES] = update.notesUrl
+        }
+
+    val notifiedUpdateVersion: Flow<String?> = context.dataStore.data.map { it[NOTIFIED_UPDATE_VERSION] }
+
+    suspend fun setNotifiedUpdateVersion(version: String) =
+        context.dataStore.edit { it[NOTIFIED_UPDATE_VERSION] = version }
+
+    val lastUpdateCheckMs: Flow<Long> = context.dataStore.data.map { it[LAST_UPDATE_CHECK] ?: 0L }
+
+    suspend fun setLastUpdateCheckMs(ms: Long) = context.dataStore.edit { it[LAST_UPDATE_CHECK] = ms }
 }

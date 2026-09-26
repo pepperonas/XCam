@@ -15,7 +15,7 @@
 <h3>👉 <a href="https://x-cam.celox.io">x-cam.celox.io</a> — features, install guide, FAQ and always the newest APK</h3>
 
 [![version](https://img.shields.io/github/v/release/pepperonas/XCam?style=for-the-badge&color=E5484D&logo=android&logoColor=white&label=version)](https://github.com/pepperonas/XCam/releases/latest)
-[![unit tests](https://img.shields.io/badge/unit%20tests-50-2E9E5B?style=for-the-badge&logo=junit5&logoColor=white)](app/src/test)
+[![unit tests](https://img.shields.io/badge/unit%20tests-61-2E9E5B?style=for-the-badge&logo=junit5&logoColor=white)](app/src/test)
 [![lines of code](https://img.shields.io/badge/lines%20of%20code-4.4k-4B6BDF?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/main/java)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/pepperonas/XCam/ci.yml?branch=main&label=build&logo=github)](https://github.com/pepperonas/XCam/actions/workflows/ci.yml)
@@ -48,7 +48,10 @@
   size; share or delete one or several at once; built-in player.
 - **Your camera, your quality** — back or front, 720p / 1080p / 4K, with or without sound; steps down
   instead of failing if a lens cannot do the chosen size. Settings are saved.
-- **Nothing leaves your phone** — XCam requests no internet permission. No account, no ads, no analytics.
+- **Nothing leaves your phone** — recordings are never uploaded. The only connection XCam makes is a
+  check for new versions at x-cam.celox.io (switchable in Settings). No account, no ads, no analytics.
+- **Tells you about updates** — a notification (and a hint in the app) when a new release is out; a tap
+  opens the website with the download.
 - **Material 3 Expressive** — spring physics everywhere, light and dark theme, optional wallpaper colours,
   English and German.
 

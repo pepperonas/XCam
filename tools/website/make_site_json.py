@@ -81,15 +81,15 @@ site = {
             "title": "XCam — Record Video with the Screen Off (Android)",
             "description": "Free Android app that keeps recording video with the screen off. One tap to start, stop from the notification, auto-stop timer. Open source.",
             "og_title": "XCam — Record with the screen off.",
-            "og_description": "Start a recording, lock your phone, XCam keeps going. Free, open source, no internet access.",
-            "twitter_description": "Free Android app that records video with the screen off. Open source, no internet access.",
+            "og_description": "Start a recording, lock your phone, XCam keeps going. Free, open source, no account, no tracking.",
+            "twitter_description": "Free Android app that records video with the screen off. Open source, no account, no tracking.",
             "image_alt": "XCam on a phone: a red record button that has turned into a stop square, a timer and a progress ring",
         },
         "summary": (
             "Free, open-source (MIT) Android app that records video in the background with the screen off. "
             "Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the "
             "notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. "
-            "The app requests no internet permission. Android 13+, 64-bit ARM, distributed as a signed APK."
+            "Its only network access is an optional update check against x-cam.celox.io. Android 13+, 64-bit ARM, distributed as a signed APK."
         ),
         "meta_fallback": "Newest release · Android 13+ · 64-bit ARM · free, MIT licence",
         "feature_list": [
@@ -101,7 +101,8 @@ site = {
             "Built-in player with share and delete",
             "Material 3 Expressive design with light and dark theme and optional wallpaper colours",
             "English and German",
-            "No internet permission, no account, no ads, no tracking",
+            "No account, no ads, no tracking; the only network access is a switchable update check",
+            "Notifies you when a new version is released",
             "Free and open source (MIT)",
         ],
         "limits": [
@@ -137,15 +138,15 @@ site = {
         ),
         "hero.lead": t(
             "XCam keeps recording video while your phone is locked — saved straight to your gallery, stopped "
-            "whenever you want. No account, no ads, no internet access.",
+            "whenever you want. No account, no ads, no tracking.",
             "XCam nimmt weiter Video auf, während dein Handy gesperrt ist — direkt in deine Galerie gespeichert, "
-            "beendet wann du willst. Kein Konto, keine Werbung, kein Internetzugriff.",
+            "beendet wann du willst. Kein Konto, keine Werbung, kein Tracking.",
             "XCam sigue grabando vídeo mientras tu teléfono está bloqueado: se guarda directamente en tu galería "
-            "y se detiene cuando quieras. Sin cuenta, sin anuncios, sin acceso a internet.",
+            "y se detiene cuando quieras. Sin cuenta, sin anuncios, sin rastreo.",
             "XCam continua a registrare video mentre il telefono è bloccato: salvato direttamente nella galleria, "
-            "fermato quando vuoi. Nessun account, nessuna pubblicità, nessun accesso a internet.",
+            "fermato quando vuoi. Nessun account, nessuna pubblicità, nessun tracciamento.",
             "XCam continue d’enregistrer la vidéo pendant que votre téléphone est verrouillé — directement dans "
-            "votre galerie, arrêtée quand vous voulez. Sans compte, sans pub, sans accès à internet.",
+            "votre galerie, arrêtée quand vous voulez. Sans compte, sans pub, sans pistage.",
         ),
         "pl.h": t("Supported", "Unterstützt", "Compatible", "Supportato", "Compatible"),
         "f.h": t(
@@ -270,16 +271,16 @@ site = {
                     "Rien ne quitte votre téléphone",
                 ),
                 "p": t(
-                    "XCam does not even request internet access. No account, no ads, no analytics — and the source "
-                    "code is open for anyone to check.",
-                    "XCam fordert nicht einmal Internetzugriff an. Kein Konto, keine Werbung, keine Analyse — und der "
-                    "Quellcode ist offen, jeder kann ihn prüfen.",
-                    "XCam ni siquiera solicita acceso a internet. Sin cuenta, sin anuncios, sin analíticas, y el "
-                    "código fuente es abierto para que cualquiera lo revise.",
-                    "XCam non richiede nemmeno l’accesso a internet. Nessun account, nessuna pubblicità, nessuna "
-                    "analisi, e il codice sorgente è aperto a chiunque voglia controllarlo.",
-                    "XCam ne demande même pas l’accès à internet. Sans compte, sans pub, sans statistiques — et le "
-                    "code source est ouvert à qui veut le vérifier.",
+                    "Recordings are never uploaded. The only connection XCam makes is a check for new versions at "
+                    "x-cam.celox.io, and you can switch it off. No account, no ads, no analytics — open source.",
+                    "Aufnahmen werden nie hochgeladen. Die einzige Verbindung ist die Prüfung auf neue Versionen bei "
+                    "x-cam.celox.io — und die lässt sich abschalten. Kein Konto, keine Werbung, keine Analyse — Open Source.",
+                    "Las grabaciones nunca se suben. La única conexión de XCam es comprobar nuevas versiones en "
+                    "x-cam.celox.io, y puedes desactivarla. Sin cuenta, sin anuncios, sin analíticas, de código abierto.",
+                    "Le registrazioni non vengono mai caricate. L’unica connessione di XCam è il controllo di nuove "
+                    "versioni su x-cam.celox.io, e puoi disattivarlo. Nessun account, nessuna pubblicità, nessuna analisi, open source.",
+                    "Les enregistrements ne sont jamais envoyés. La seule connexion de XCam vérifie les nouvelles "
+                    "versions sur x-cam.celox.io, et vous pouvez la désactiver. Sans compte, sans pub, sans statistiques — open source.",
                 ),
             },
         ],
@@ -403,15 +404,20 @@ site = {
                 "q": t("How do I update?", "Wie aktualisiere ich?", "¿Cómo actualizo?", "Come aggiorno?", "Comment mettre à jour ?"),
                 "a": t(
                     "Download the newest APK from this page and install it over the app — every release from 3.0.0 on "
-                    "is signed with the same key. Only from version 2.x you have to uninstall once.",
+                    "is signed with the same key. From 3.1.0 on, XCam tells you itself when a new version is out. Only "
+                    "from version 2.x you have to uninstall once.",
                     "Lade die neueste APK von dieser Seite und installiere sie über die App — jedes Release ab 3.0.0 ist "
-                    "mit demselben Schlüssel signiert. Nur von Version 2.x aus musst du einmal deinstallieren.",
+                    "mit demselben Schlüssel signiert. Ab 3.1.0 meldet XCam selbst, wenn eine neue Version da ist. Nur von "
+                    "Version 2.x aus musst du einmal deinstallieren.",
                     "Descarga la APK más reciente desde esta página e instálala encima: cada versión desde la 3.0.0 está "
-                    "firmada con la misma clave. Solo desde la versión 2.x hay que desinstalar una vez.",
+                    "firmada con la misma clave. Desde la 3.1.0, XCam te avisa cuando hay una versión nueva. Solo desde "
+                    "la versión 2.x hay que desinstalar una vez.",
                     "Scarica l’APK più recente da questa pagina e installala sopra l’app: ogni versione dalla 3.0.0 è "
-                    "firmata con la stessa chiave. Solo dalla versione 2.x devi disinstallare una volta.",
+                    "firmata con la stessa chiave. Dalla 3.1.0 XCam ti avvisa da sola quando esce una nuova versione. Solo "
+                    "dalla versione 2.x devi disinstallare una volta.",
                     "Téléchargez la dernière APK sur cette page et installez-la par-dessus l’appli — chaque version depuis "
-                    "la 3.0.0 est signée avec la même clé. Seulement depuis la version 2.x, il faut désinstaller une fois.",
+                    "la 3.0.0 est signée avec la même clé. Depuis la 3.1.0, XCam vous prévient elle-même d’une nouvelle "
+                    "version. Seulement depuis la version 2.x, il faut désinstaller une fois.",
                 ),
             },
             {

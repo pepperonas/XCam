@@ -23,3 +23,4 @@ keystore.properties
 /.playwright-mcp
 /tools/node_modules
 __pycache__/
+.kotlin/

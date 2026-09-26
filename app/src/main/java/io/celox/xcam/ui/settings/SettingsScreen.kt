@@ -52,6 +52,7 @@ fun SettingsScreen(
     onMaxDurationChange: (Int) -> Unit,
     onThemeChange: (ThemeMode) -> Unit,
     onDynamicColorChange: (Boolean) -> Unit,
+    onUpdateChecksChange: (Boolean) -> Unit,
 ) {
     val haptics = rememberHaptics()
     val config = settings.recording
@@ -160,6 +161,16 @@ fun SettingsScreen(
             SectionHeader(stringResource(R.string.settings_section_about), Modifier.springEntrance(4))
             SectionCard(Modifier.springEntrance(5)) {
                 InfoRow(XIcons.Info, stringResource(R.string.setting_version), BuildConfig.VERSION_NAME)
+                SwitchRow(
+                    icon = XIcons.Notifications,
+                    title = stringResource(R.string.setting_update_checks),
+                    supporting = stringResource(R.string.setting_update_checks_hint),
+                    checked = settings.updateChecks,
+                    onChange = {
+                        if (it) haptics.toggleOn() else haptics.toggleOff()
+                        onUpdateChecksChange(it)
+                    },
+                )
                 InfoRow(XIcons.VideoLibrary, stringResource(R.string.setting_storage), stringResource(R.string.setting_storage_value))
                 val uriHandler = LocalUriHandler.current
                 val website = stringResource(R.string.website_url)

@@ -1,5 +1,6 @@
 package io.celox.xcam.ui.onboarding
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -91,6 +92,9 @@ fun OnboardingScreen(
     fun goTo(target: Int) {
         scope.launch { pager.animateScrollToPage(target) }
     }
+
+    // Back walks the pages backwards; only on the first page does it leave the app.
+    BackHandler(enabled = pager.currentPage > 0) { goTo(pager.currentPage - 1) }
 
     // A freshly granted permission moves on by itself.
     LaunchedEffect(permissions.camera) {

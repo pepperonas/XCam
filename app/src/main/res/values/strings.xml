@@ -126,6 +126,17 @@
     <string name="onboarding_done">Get started</string>
     <string name="onboarding_page">Page %1$d of %2$d</string>
 
+    <!-- Updates -->
+    <string name="setting_update_checks">Update notifications</string>
+    <string name="setting_update_checks_hint">Checks x-cam.celox.io for new versions twice a day — the app\'s only network access. Nothing about you or your recordings is sent.</string>
+    <string name="update_channel_name">App updates</string>
+    <string name="update_channel_description">Tells you when a new XCam version is available</string>
+    <string name="update_notification_title">XCam %1$s is available</string>
+    <string name="update_notification_text">Tap to open the website with the download and the changelog.</string>
+    <string name="update_whats_new">What\'s new</string>
+    <string name="update_available">XCam %1$s is available</string>
+    <string name="update_open_website">Website</string>
+
     <!-- Notification -->
     <string name="notification_channel_name">Recording</string>
     <string name="notification_channel_description">Shows while a recording is running</string>

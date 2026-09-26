@@ -52,7 +52,7 @@ class StringsParityTest {
     fun `no untranslated english slipped into german`() {
         // Identical text is allowed only where the word is the same in both languages.
         val sameOnPurpose = setOf("nav_videos", "videos_meta", "videos_size_mb", "theme_system", "player_pause",
-            "quality_720_long", "quality_1080_long", "quality_4k_long", "setting_version", "setting_website")
+            "quality_720_long", "quality_1080_long", "quality_4k_long", "setting_version", "setting_website", "update_open_website")
         val suspicious = en.keys.filter { it !in sameOnPurpose && en[it] == de[it] }
         assertTrue("untranslated: $suspicious", suspicious.isEmpty())
     }

@@ -27,7 +27,6 @@ enum class Destination(
 }
 
 object Routes {
-    const val ONBOARDING = "onboarding"
     const val PLAYER = "player/{id}"
 
     fun player(id: Long) = "player/$id"

@@ -58,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -74,6 +75,8 @@ import io.celox.xcam.data.model.RecordingConfig
 import io.celox.xcam.data.model.RecordingState
 import io.celox.xcam.data.model.VideoFile
 import io.celox.xcam.data.model.VideoQuality
+import io.celox.xcam.data.update.AppUpdate
+import io.celox.xcam.data.update.UpdateChecker
 import io.celox.xcam.ui.PermissionActions
 import io.celox.xcam.ui.Permissions
 import io.celox.xcam.ui.components.ExpressiveLoadingIndicator
@@ -101,6 +104,7 @@ fun RecordScreen(
     state: RecordingState,
     config: RecordingConfig,
     latest: VideoFile?,
+    availableUpdate: AppUpdate?,
     permissions: Permissions,
     permissionActions: PermissionActions,
     onStart: () -> Unit,
@@ -128,6 +132,9 @@ fun RecordScreen(
                 .padding(bottom = Spacing.xxl),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            AnimatedVisibility(visible = availableUpdate != null && !state.isBusy) {
+                availableUpdate?.let { UpdateBanner(it) }
+            }
             AnimatedVisibility(visible = state is RecordingState.Error) {
                 (state as? RecordingState.Error)?.let { error ->
                     ErrorBanner(error, onDismiss = onDismissError, onRetry = {
@@ -595,6 +602,34 @@ private fun PermissionCard(
             }
             TextButton(onClick = actions.openAppSettings) {
                 Text(stringResource(R.string.record_permission_settings))
+            }
+        }
+    }
+}
+
+/** "XCam 3.1.0 is available" — opens the product page (download button, changelog, checksum). */
+@Composable
+private fun UpdateBanner(update: AppUpdate) {
+    val uriHandler = LocalUriHandler.current
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(top = Spacing.md),
+        shape = BannerShape,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+    ) {
+        Row(
+            Modifier.padding(start = Spacing.lg, end = Spacing.sm, top = Spacing.sm, bottom = Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(XIcons.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
+            Spacer(Modifier.width(Spacing.md))
+            Text(
+                stringResource(R.string.update_available, update.version.removePrefix("v")),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = { uriHandler.openUri(UpdateChecker.WEBSITE_URL) }) {
+                Text(stringResource(R.string.update_open_website))
             }
         }
     }

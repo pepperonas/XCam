@@ -14,6 +14,7 @@ import io.celox.xcam.data.model.RecordingState
 import io.celox.xcam.data.model.ThemeMode
 import io.celox.xcam.data.model.VideoFile
 import io.celox.xcam.data.model.VideoQuality
+import io.celox.xcam.data.update.UpdateWatcher
 import io.celox.xcam.service.RecordingService
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -106,6 +107,19 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun updateThemeMode(mode: ThemeMode) {
         viewModelScope.launch { preferences.setThemeMode(mode) }
+    }
+
+    fun updateUpdateChecks(enabled: Boolean) {
+        viewModelScope.launch {
+            preferences.setUpdateChecks(enabled)
+            val app = getApplication<Application>()
+            if (enabled) {
+                UpdateWatcher.schedule(app)
+                runCatching { UpdateWatcher.check(app) }
+            } else {
+                UpdateWatcher.cancel(app)
+            }
+        }
     }
 
     fun updateDynamicColor(enabled: Boolean) {

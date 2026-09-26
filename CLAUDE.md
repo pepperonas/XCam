@@ -14,7 +14,7 @@ XCam is a native Android app (Kotlin, Jetpack Compose) for background video reco
 ./gradlew assembleReleaseDebug    # R8 build with debug signing
 ./gradlew installDebug
 
-./gradlew testDebugUnitTest       # 50 unit tests (JVM + Robolectric)
+./gradlew testDebugUnitTest       # 61 unit tests (JVM + Robolectric)
 ./gradlew testDebugUnitTest --tests "io.celox.xcam.data.RecordingRepositoryTest"
 ./gradlew testDebugUnitTest --tests "io.celox.xcam.util.TimeFormatTest.the*"
 
@@ -52,8 +52,13 @@ MVVM with Compose, no DI. One `RecordingViewModel` (AndroidViewModel), obtained 
 - **Videos:** `VideoRepository` queries MediaStore (`RELATIVE_PATH LIKE 'Movies/XCam/%'`), observes changes with a `ContentObserver`, deletes via `contentResolver.delete` with a `createDeleteRequest` fallback (emitted as `UiEvent.ConfirmDelete`). Without `READ_MEDIA_VIDEO` MediaStore only returns files this install created — after a reinstall older recordings are hidden, so the Videos tab offers the optional media permission (`Permissions.media`). Sharing uses the content URIs directly (`util/Share.kt`, no FileProvider).
 - `groupByDay` (pure, clock as parameter) builds the Today/Yesterday/date sections.
 
+### Update notifications (since 3.1.0)
+
+`data/update/`: `UpdateChecker` (HttpURLConnection, `x-cam.celox.io/latest.json` first — no GitHub rate limit — then `api.github.com/…/releases/latest`), pure `ReleaseParser` (org.json → Robolectric tests; only https notes links) and `AppVersions` (`isNewer`, `shouldNotify` = enabled && newer && newer than the last notified release), `UpdateNotifier` (channel `app_updates`, tap → product page, action → release notes; not recorded as sent when it could not be shown), `UpdateWatcher` (one check shared by app start [`checkIfDue`, 12 h throttle] and a periodic WorkManager `Worker` every 12 h with network; `schedule` uses KEEP). `XCamApplication` schedules or cancels by the setting; `AppSettings.updateChecks` (default on) + `knownUpdate` in DataStore; the Record screen shows `UpdateBanner` while `knownUpdate` is newer than `BuildConfig.VERSION_NAME`. This is the app's **only** network access (INTERNET permission since 3.1.0) — keep website/README/FAQ wording in sync if that ever changes. End-to-end test: install a debug build with a lower `versionName`, launch → notification from the live site.
+
 ### UI
 
+- **Navigation / back (fixed in 3.1.0):** onboarding is **not** a NavHost destination — `XCamApp` switches between `OnboardingScreen` and `MainShell` with an `AnimatedContent` on `settings.onboardingCompleted`. As the graph's start it broke `navigateToTab`'s `popUpTo(findStartDestination())` after it was popped (tabs piled up on the back stack). Record is the fixed root: back = player → tab → Record → exit. The player's `onBack` is `dropUnlessResumed { … }` (a delete also makes the video disappear, which calls `onBack` a second time) and `openPlayer` only navigates from the resumed entry (double tap). Onboarding has a `BackHandler` for the previous page; `android:enableOnBackInvokedCallback="true"` gives predictive back, NavHost seeks the pop transitions. Verify with `adb shell input keyevent KEYCODE_BACK` per screen; `uiautomator dump` fails while a video plays — use screenshots there.
 - `ui/XCamApp.kt`: outer `Scaffold` (`contentWindowInsets = WindowInsets(0)`) with an M3 Expressive `ShortNavigationBar` (Record · Videos · Settings, hidden on player/onboarding) and a `NavHost` padded + `consumeWindowInsets`. Tab changes go through `navigateToTab()`. Routes in `ui/navigation/Destination.kt`; player is `player/{id}` (MediaStore id).
 - Theme: `ui/theme/Theme.kt` uses `MaterialExpressiveTheme` + `MotionScheme.expressive()`. `Color.kt` is **generated** by `tools/color-scheme.mjs` from seed `#E5484D` (accents from SchemeVibrant, neutrals from SchemeTonalSpot) — regenerate, don't hand-edit. `Shape.kt`/`Dimens.kt` = spacing/shape scales.
 - Motion: all animation specs come from `MaterialTheme.motionScheme` (spatial springs move, effects springs fade — effects never overshoot). `ui/motion/`: `rememberReduceMotion()` (every custom animation checks it), `springEntrance`, `ScreenTransitions` (tab fade-through / child rise, ported from flipper), `MorphShape` + `rememberMorph` (graphics-shapes `Morph`). **Inside `transitionSpec` lambdas `MaterialTheme` is not accessible** — read `val motion = MaterialTheme.motionScheme` in the composable first.

@@ -52,4 +52,20 @@ class ConfigPrefsTest {
             )
         assertEquals(decodeAllNull(), settings)
     }
+
+    @Test
+    fun `update checks are on by default and a stored known release comes back`() {
+        assertEquals(true, decodeAllNull().updateChecks)
+        val settings =
+            ConfigPrefs.decode(null, null, null, null, null, null, null, updateChecks = false,
+                knownVersion = "v3.1.0", knownNotes = "https://github.com/pepperonas/XCam/releases/tag/v3.1.0")
+        assertEquals(false, settings.updateChecks)
+        assertEquals(io.celox.xcam.data.update.AppUpdate("v3.1.0", "https://github.com/pepperonas/XCam/releases/tag/v3.1.0"), settings.knownUpdate)
+    }
+
+    @Test
+    fun `a stored release with a non-https link is dropped, it would be opened in a browser`() {
+        val settings = ConfigPrefs.decode(null, null, null, null, null, null, null, knownVersion = "v3.1.0", knownNotes = "file:///sdcard/x")
+        assertEquals(null, settings.knownUpdate)
+    }
 }

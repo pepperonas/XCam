@@ -11,6 +11,38 @@ a tag without a section here fails the workflow.
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-09-26
+
+XCam now tells you when a new version is out, and back navigation behaves.
+
+### Added
+- **Update notifications.** Twice a day (only with a network) and at most every 12 hours on app start,
+  XCam checks `x-cam.celox.io/latest.json` for a newer release, with GitHub as the fallback. A new
+  version is announced once, in its own notification channel "App updates": a tap opens the website
+  with the download, *What's new* opens the release notes. While it is newer than the installed build,
+  the Record screen shows it too.
+- A switch in **Settings → About → Update notifications** (on by default) turns the check off completely
+  and cancels the background job.
+
+### Fixed — back navigation
+- **Back walked through the whole tab history after the first start.** Onboarding was the start of the
+  navigation graph; once it was left, switching tabs never reset the stack, so back went Settings →
+  Videos → Record → Videos … Onboarding now runs before the app instead of inside its navigation:
+  back always goes player → tab → Record → out.
+- **Deleting a video in the player** returned to Record instead of the list (the player closed twice);
+  a quick double tap on the back arrow or on a recording could do the same. Navigation now only happens
+  from the screen that is actually in front.
+- **Back in the introduction** goes to the previous page instead of closing the app.
+- **Predictive back** is on: the gesture shows the screen you are going back to (and, on Record, the
+  home screen) before you let go.
+
+### Changed
+- XCam now has the `INTERNET` permission — used for nothing but this check. Recordings are never
+  uploaded and no data about you is sent; the website, README and FAQ say so instead of
+  "no internet access".
+- Versions 3.0.0 and older have no update check, so they will not announce this release — this is the
+  first version that does.
+
 ## [3.0.0] - 2026-09-26
 
 A new design from the ground up — Material 3 Expressive with spring physics — and a recording state

@@ -23,8 +23,8 @@ android {
         applicationId = "io.celox.xcam"
         minSdk = 33
         targetSdk = 35
-        versionCode = 10
-        versionName = "3.0.0"
+        versionCode = 11
+        versionName = "3.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -128,6 +128,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.guava)
+    // Background update check (twice a day, only with a network)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // CameraX (only required modules)
     implementation(libs.androidx.camera.camera2)
