@@ -2,7 +2,7 @@
 """Writes website/site.json for the product-page kit (_templates/apps/product-page).
 
 Kept as a script rather than hand-edited JSON: five languages side by side per text are easier to
-review, and the output is always valid JSON. Run: python3 website/make_site_json.py
+review, and the output is always valid JSON. Run: python3 tools/website/make_site_json.py
 """
 import json
 import pathlib
@@ -479,6 +479,6 @@ site = {
     },
 }
 
-out = pathlib.Path(__file__).with_name("site.json")
+out = pathlib.Path(__file__).resolve().parents[2] / "website" / "site.json"
 out.write_text(json.dumps(site, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 print(f"wrote {out}")
