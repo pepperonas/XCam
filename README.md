@@ -1,265 +1,100 @@
 <div align="center">
 
+<a href="https://x-cam.celox.io"><img src="docs/banner.jpg" alt="XCam — record video with the screen off. Open the website." width="100%"></a>
+
 # XCam
 
-**Background Video Recorder for Android**
+**Record video with the screen off — a free, open-source Android app.**
 
-[![CI](https://github.com/pepperonas/XCam/actions/workflows/ci.yml/badge.svg)](https://github.com/pepperonas/XCam/actions/workflows/ci.yml)
-[![Release](https://github.com/pepperonas/XCam/actions/workflows/build-apk.yml/badge.svg)](https://github.com/pepperonas/XCam/actions/workflows/build-apk.yml)
-[![GitHub release](https://img.shields.io/github/v/release/pepperonas/XCam?include_prereleases&style=flat&color=F59E0B)](https://github.com/pepperonas/XCam/releases)
-[![API](https://img.shields.io/badge/API-33%2B-brightgreen?style=flat)](https://android-arsenal.com/api?level=33)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=flat&logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat)](LICENSE)
+<p>
+  <a href="https://x-cam.celox.io"><img alt="Website: x-cam.celox.io" height="56" src="https://img.shields.io/badge/%F0%9F%8C%90_Website-x--cam.celox.io-E5484D?style=for-the-badge"></a>
+  &nbsp;
+  <a href="https://x-cam.celox.io/download"><img alt="Download the newest APK" height="56" src="https://img.shields.io/badge/%E2%AC%87%EF%B8%8F_Download-newest_APK-2E9E5B?style=for-the-badge&logo=android&logoColor=white"></a>
+</p>
 
-Record video with the screen off. A native Android app for discreet background recording — built with Kotlin, Jetpack Compose, and CameraX.
+<h3>👉 <a href="https://x-cam.celox.io">x-cam.celox.io</a> — features, install guide, FAQ and always the newest APK</h3>
 
-[**Download APK**](https://github.com/pepperonas/XCam/releases/latest) · [Architecture](ARCHITECTURE.md) · [Setup Guide](SETUP.md)
+[![version](https://img.shields.io/github/v/release/pepperonas/XCam?style=for-the-badge&color=E5484D&logo=android&logoColor=white&label=version)](https://github.com/pepperonas/XCam/releases/latest)
+[![unit tests](https://img.shields.io/badge/unit%20tests-50-2E9E5B?style=for-the-badge&logo=junit5&logoColor=white)](app/src/test)
+[![lines of code](https://img.shields.io/badge/lines%20of%20code-4.4k-4B6BDF?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/main/java)
+
+[![CI](https://img.shields.io/github/actions/workflow/status/pepperonas/XCam/ci.yml?branch=main&label=build&logo=github)](https://github.com/pepperonas/XCam/actions/workflows/ci.yml)
+[![Release workflow](https://img.shields.io/github/actions/workflow/status/pepperonas/XCam/release.yml?label=release&logo=githubactions)](https://github.com/pepperonas/XCam/actions/workflows/release.yml)
+[![APK size](https://img.shields.io/badge/APK-23.4%20MB-4B6BDF?logo=android&logoColor=white)](#-download)
+[![ABI](https://img.shields.io/badge/ABI-arm64--v8a%20only-4B6BDF?logo=arm&logoColor=white)](#-download)
+[![languages](https://img.shields.io/badge/languages-EN%20%C2%B7%20DE-0E7C86?logo=googletranslate&logoColor=white)](app/src/main/res)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.11-3DDC84?logo=android&logoColor=white)](https://developer.android.com/jetpack/compose)
+[![Material 3 Expressive](https://img.shields.io/badge/Material%203-Expressive-E5484D?logo=materialdesign&logoColor=white)](https://m3.material.io/blog/m3-expressive-motion-theming)
+[![min SDK](https://img.shields.io/badge/min%20SDK-33-blue?logo=android&logoColor=white)](app/build.gradle.kts)
+[![target SDK](https://img.shields.io/badge/target%20SDK-35-blue?logo=android&logoColor=white)](app/build.gradle.kts)
+[![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-E05735?logo=keepachangelog&logoColor=white)](CHANGELOG.md)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 
 </div>
 
 ---
 
-## Features
+<p align="center"><img src="docs/screenshots.jpg" alt="Four screens: the record button in the light theme, recording with the time-limit ring, the recordings list and the German settings" width="100%"></p>
 
-<table>
-<tr>
-<td width="50%">
+## ✨ Features
 
-### Recording
-- Background video recording with screen off
-- Front & rear camera support
-- 720p / 1080p / 4K quality
-- Optional audio recording
-- Auto-stop at low battery (<10%)
-- Wake lock keeps device active
-- Foreground notification with timer & stop button
+- **Keeps recording with the screen off** — a camera + microphone foreground service with its own wake lock.
+- **One button that is its state** — idle it is a slowly turning nine-lobed shape; tap it and it morphs
+  (on a spring) into a stop square. The state on screen comes from CameraX's own events, not a guess.
+- **Stop from anywhere** — in the app, from the notification, or automatically after 5, 15, 30 or 60
+  minutes; a wavy ring around the button shows the time running.
+- **Straight into your gallery** — MP4 files in `Movies/XCam`, listed by day with thumbnail, length and
+  size; share or delete one or several at once; built-in player.
+- **Your camera, your quality** — back or front, 720p / 1080p / 4K, with or without sound; steps down
+  instead of failing if a lens cannot do the chosen size. Settings are saved.
+- **Nothing leaves your phone** — XCam requests no internet permission. No account, no ads, no analytics.
+- **Material 3 Expressive** — spring physics everywhere, light and dark theme, optional wallpaper colours,
+  English and German.
 
-</td>
-<td width="50%">
+## ⬇️ Download
 
-### User Experience
-- Dark & Amber premium theme
-- Glassmorphic card design
-- Animated recording indicator with glow effect
-- Inter font family (4 weights)
-- 4-page onboarding with permission flow
-- Native splash screen (Android 12+ API)
-- Haptic feedback on all interactions
+**[x-cam.celox.io](https://x-cam.celox.io)** always offers the newest signed APK with its SHA-256
+checksum — or grab it from [GitHub Releases](https://github.com/pepperonas/XCam/releases/latest).
 
-</td>
-</tr>
-<tr>
-<td width="50%">
+- Android 13 or newer, 64-bit ARM.
+- Signing certificate SHA-256:
+  `78f163f0bfcff57e2e7d3212dee8aedb1d3bfdf48ce4c1512bf7801955a1cf38`
+  (check with `apksigner verify --print-certs xcam-v3.0.0.apk`).
+- **Coming from 2.x?** Version 3.0.0 is signed with a new key, so uninstall the old app once. Your
+  recordings stay in `Movies/XCam`; in the Videos tab, *Allow* lets XCam list them again.
 
-### Video Management
-- Real video thumbnails via Coil
-- Duration badges on thumbnails
-- Tap-to-play with built-in player
-- Full-screen ExoPlayer playback
-- Auto-hiding player controls
-- Seek bar with time display
-- Delete with confirmation dialog
-
-</td>
-<td width="50%">
-
-### Technical
-- MVVM architecture
-- Jetpack Compose + Material 3
-- CameraX VideoCapture API
-- Media3 ExoPlayer
-- DataStore for preferences
-- Custom vector icons (~15 MB savings)
-- Adaptive icon (stealth eye design)
-
-</td>
-</tr>
-</table>
-
-## Quick Start
-
-### Install from Release
-
-1. Download the latest APK from the [**Releases page**](https://github.com/pepperonas/XCam/releases/latest)
-2. Install on your Android 13+ device (ARM64)
-3. Follow the onboarding flow to grant permissions
-4. Tap **Start Recording** and lock your screen
-
-### Build from Source
+## 🛠️ Build
 
 ```bash
-git clone https://github.com/pepperonas/XCam.git
-cd XCam
-./gradlew assembleDebug
-./gradlew installDebug
+./gradlew assembleDebug           # debug APK
+./gradlew testDebugUnitTest       # unit tests
+./gradlew lintDebug               # Android lint (CI: 0 errors)
+./gradlew assembleRelease         # signed release APK (needs keystore.properties + release.jks)
 ```
 
-> **Requirements:** Android Studio Hedgehog+, JDK 17, Android SDK 34
+JDK 17. The Compose/Material 3 versions are pinned (no BOM) because the Expressive APIs live in the
+material3 1.5.0 alpha line — see `gradle/libs.versions.toml`. R8 needs a 6 GB Gradle heap
+(`gradle.properties`).
 
-## Architecture
+## 🚀 Releasing
 
-```
-MainActivity (Splash, NavHost, Permissions)
-├── OnboardingScreen ─── 4-page HorizontalPager with permission flow
-├── MainScreen ────────── Recording controls + animated indicator
-├── SettingsScreen ────── Glassmorphic config cards
-├── VideosScreen ──────── Thumbnail grid with tap-to-play
-└── VideoPlayerScreen ─── Full-screen ExoPlayer
+1. Bump `versionCode` and `versionName` in `app/build.gradle.kts`.
+2. Add a `## [x.y.z] - date` section to [CHANGELOG.md](CHANGELOG.md) — it becomes the release notes.
+3. `git tag vX.Y.Z && git push origin vX.Y.Z` — the release workflow runs the tests, builds and signs the
+   APK, verifies the certificate and publishes it. The website picks up the new release within 15 minutes.
 
-    RecordingViewModel (shared AndroidViewModel)
-    ├── RecordingService ─── CameraX foreground service
-    ├── PreferencesManager ── DataStore wrapper
-    └── StateFlows: recordingState, recordingConfig, videoFiles
-```
+## 🧱 Architecture
 
-| Layer | Components |
-|-------|-----------|
-| **UI** | Jetpack Compose, Material 3, Custom Icons, Inter Font |
-| **Navigation** | `onboarding` → `main` → `settings` / `videos` → `player/{id}` |
-| **State** | `RecordingViewModel` with `StateFlow` (Idle → Starting → Recording → Stopping) |
-| **Service** | `RecordingService` (LifecycleService, CameraX, WakeLock, Notification) |
-| **Data** | `PreferencesManager` (DataStore), `VideoFile` (MediaMetadataRetriever) |
+MVVM with Jetpack Compose, no DI framework. `RecordingService` (a `LifecycleService`) is the only writer
+of `RecordingRepository`, a process-wide `StateFlow` the UI observes; settings live in DataStore,
+recordings in MediaStore. Details: [CLAUDE.md](CLAUDE.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 
-> Full architecture documentation: [ARCHITECTURE.md](ARCHITECTURE.md)
+## ⚖️ Use responsibly
 
-## Testing
+Recording people without their consent is illegal in many countries. XCam is meant for your own security
+and documentation — you are responsible for complying with the law where you record.
 
-```bash
-# Run unit tests
-./gradlew testDebugUnitTest
+## 📄 License
 
-# Run lint checks
-./gradlew lintDebug
-
-# Run all checks
-./gradlew testDebugUnitTest lintDebug
-```
-
-**44 unit tests** covering:
-
-| Suite | Tests | Coverage |
-|-------|-------|----------|
-| `VideoFileTest` | 7 | Size calculation, duration formatting, data class behavior |
-| `RecordingStateTest` | 8 | Sealed class singletons, state equality, type checks |
-| `RecordingConfigTest` | 6 | Default values, copy semantics, equality |
-| `VideoQualityTest` | 6 | Enum properties, resolution ordering, valueOf |
-| `ConstantsTest` | 9 | Action prefixes, uniqueness, non-empty values |
-| `ColorTest` | 7 | Brightness ordering, alpha transparency, gradient consistency |
-| `ExampleUnitTest` | 1 | Sanity check |
-
-CI runs tests automatically on every push to `main` and on pull requests.
-
-## CI/CD
-
-| Workflow | Trigger | Steps |
-|----------|---------|-------|
-| **CI** | Push to `main`, PRs | Unit Tests → Lint → Build |
-| **Release** | Git tag `v*` | Unit Tests → Build → GitHub Release with APK |
-
-### Create a Release
-
-```bash
-# Bump versionCode + versionName in app/build.gradle.kts, then:
-git tag -a v2.1 -m "v2.1 - Description"
-git push origin v2.1
-```
-
-The workflow builds a minified APK (R8), attaches it to the GitHub Release, and generates release notes automatically.
-
-## Project Structure
-
-```
-app/src/main/
-├── java/io/celox/xcam/
-│   ├── MainActivity.kt                 # Entry point, splash, navigation
-│   ├── data/
-│   │   ├── PreferencesManager.kt       # DataStore wrapper
-│   │   └── model/
-│   │       ├── RecordingConfig.kt      # Camera, quality, audio config
-│   │       ├── RecordingState.kt       # Sealed class state machine
-│   │       └── VideoFile.kt            # Video metadata + formatting
-│   ├── service/
-│   │   └── RecordingService.kt         # CameraX foreground service
-│   ├── receiver/
-│   │   └── RecordingActionReceiver.kt  # Notification stop handler
-│   ├── viewmodel/
-│   │   └── RecordingViewModel.kt       # Shared state management
-│   ├── ui/
-│   │   ├── components/Components.kt    # GlassmorphicCard, ShimmerEffect, ...
-│   │   ├── icons/CustomIcons.kt        # 20 custom vector icons
-│   │   ├── screens/
-│   │   │   ├── OnboardingScreen.kt     # 4-page permission flow
-│   │   │   ├── MainScreen.kt           # Recording UI
-│   │   │   ├── SettingsScreen.kt       # Configuration
-│   │   │   ├── VideosScreen.kt         # Thumbnail list
-│   │   │   └── VideoPlayerScreen.kt    # ExoPlayer playback
-│   │   └── theme/                      # Dark & Amber palette, Inter font
-│   └── util/
-│       ├── Constants.kt                # Centralized constants
-│       └── PermissionUtils.kt          # Runtime permission helpers
-└── res/
-    ├── drawable/                        # Adaptive icon, splash, notification
-    ├── font/                            # Inter TTF (4 weights)
-    ├── mipmap-anydpi-v26/               # Adaptive icon config
-    └── values/                          # Colors, strings, themes
-```
-
-## Tech Stack
-
-| Category | Technology |
-|----------|-----------|
-| Language | Kotlin 2.0 |
-| UI | Jetpack Compose, Material 3 |
-| Camera | CameraX 1.3 (camera2, lifecycle, video) |
-| Video Playback | Media3 ExoPlayer 1.2 |
-| Image Loading | Coil 2.5 (compose + video thumbnails) |
-| Navigation | Navigation Compose 2.7 |
-| State | Kotlin StateFlow / Coroutines 1.7 |
-| Persistence | DataStore Preferences 1.0 |
-| Splash | AndroidX SplashScreen 1.0 |
-| Permissions | Accompanist Permissions 0.32 |
-| Build | Gradle 8.13, AGP, R8 |
-| CI/CD | GitHub Actions |
-| Min SDK | 33 (Android 13) |
-| Target SDK | 34 (Android 14) |
-| ABI | arm64-v8a |
-
-## Performance
-
-| Quality | Battery / Hour | Storage / Hour |
-|---------|---------------|----------------|
-| 720p HD | ~10-15% | ~500 MB |
-| 1080p Full HD | ~15-20% | ~1-2 GB |
-| 4K Ultra HD | ~25-35% | ~4-8 GB |
-
-## Legal Notice
-
-> **This app must only be used with the consent of all recorded persons. Unauthorized recording may be illegal and subject to prosecution. The user bears full responsibility for lawful use.**
-
-## License
-
-```
-MIT License
-
-Copyright (c) 2025 Martin Pfeffer
-```
-
-See [LICENSE](LICENSE) for the full text.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Write tests for your changes
-4. Ensure all tests pass (`./gradlew testDebugUnitTest`)
-5. Commit your changes
-6. Push and open a Pull Request
-
----
-
-<div align="center">
-
-**Built by [Martin Pfeffer](https://celox.io)** · [celox.io](https://celox.io) · martin.pfeffer@celox.io
-
-</div>
+[MIT](LICENSE) © Martin Pfeffer · [celox.io](https://celox.io)

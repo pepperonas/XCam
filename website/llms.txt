@@ -1,0 +1,52 @@
+# XCam
+
+> Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. The app requests no internet permission. Android 13+, 64-bit ARM, distributed as a signed APK.
+
+Everything below is also available without JavaScript: the page's HTML carries the current version and checksums, and `/` returns Markdown for `Accept: text/markdown`.
+
+## Get the app
+
+- [Newest release](https://x-cam.celox.io/download): the file for your platform — 302 to the current GitHub release asset
+- [APK](https://x-cam.celox.io/download/android): Android 13+ · 64-bit ARM
+- [Newest release as JSON](https://x-cam.celox.io/latest.json): `version`, `published`, `notes`, and `assets[]` with `target`, `name`, `url`, `size` (bytes), `sha256`; refreshed every 15 minutes
+- [All releases and notes](https://github.com/pepperonas/XCam/releases)
+
+## Docs
+
+- [Product page as Markdown](https://x-cam.celox.io/index.md): features, install steps, verification, FAQ, with the current version and checksums filled in
+- [Agent skill: get XCam](https://x-cam.celox.io/skills/get-x-cam/SKILL.md): download, verify and install, step by step
+- [Changelog](https://x-cam.celox.io/changelog.md): Markdown, mirrored from GitHub every 15 minutes
+- [README](https://github.com/pepperonas/XCam#readme)
+
+## Install
+
+1. One file for every 64-bit phone with Android 13 or newer — there is nothing to pick.
+2. Open the file. Android asks once to allow installs from your browser or file manager.
+3. A short introduction asks for the camera — microphone and notifications are optional. Then tap the button.
+
+## Verify
+
+- SHA-256 of every file: `assets[].sha256` in [latest.json](https://x-cam.celox.io/latest.json)
+- Signing certificate SHA-256: `78f163f0bfcff57e2e7d3212dee8aedb1d3bfdf48ce4c1512bf7801955a1cf38`
+
+## Features
+
+- Keeps recording, screen off: Recording runs in a foreground service with its own wake lock. Lock the phone, put it in your pocket — the camera keeps going until you stop it.
+- One button that is its state: Idle, the record button is a soft nine-lobed shape; tap it and it morphs into a stop square. What you see is what the camera reports — not a guess.
+- Stop from anywhere — or never: End the recording in the app or straight from the notification, or let it stop by itself after 5, 15, 30 or 60 minutes. A ring around the button fills as the time runs.
+- Straight into your gallery: Every recording is an MP4 in *Movies/XCam*. The app lists them by day with thumbnail, length and size — share or delete one or several at once.
+- Your camera, your quality: Back or front camera, 720p, 1080p or 4K, with or without sound. If a lens cannot do the chosen size, XCam steps down instead of failing. Settings survive a restart.
+- Nothing leaves your phone: XCam does not even request internet access. No account, no ads, no analytics — and the source code is open for anyone to check.
+
+## Scope and limits
+
+- Android 13 or newer on 64-bit ARM only; no iOS, no desktop.
+- No live preview, no photo mode, no cloud upload — XCam only records to the phone.
+- Recording people without their consent is illegal in many countries; the user is responsible for lawful use.
+
+## Optional
+
+- [Source code](https://github.com/pepperonas/XCam)
+- [Licence (MIT)](https://github.com/pepperonas/XCam/blob/main/LICENSE)
+- [Agent resource catalog](https://x-cam.celox.io/.well-known/ai-catalog.json)
+- [Author: Martin Pfeffer, celox.io](https://celox.io)

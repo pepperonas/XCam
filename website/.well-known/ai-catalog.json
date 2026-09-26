@@ -1,0 +1,29 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "XCam",
+    "identifier": "did:web:x-cam.celox.io",
+    "documentationUrl": "https://x-cam.celox.io/llms.txt"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:x-cam.celox.io:skills:get-x-cam",
+      "displayName": "Get XCam",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "url": "https://x-cam.celox.io/skills/get-x-cam/SKILL.md",
+      "description": "Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. The app requests no internet permission. Android 13+, 64-bit ARM, distributed as a signed APK.",
+      "tags": [
+        "android",
+        "video-recorder",
+        "background-recording",
+        "open-source"
+      ],
+      "representativeQueries": [
+        "Download the latest XCam APK",
+        "Which Android app records video with the screen off?",
+        "How do I verify that the XCam APK is genuine?",
+        "What does XCam need to run?"
+      ]
+    }
+  ]
+}

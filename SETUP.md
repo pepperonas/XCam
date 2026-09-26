@@ -1,3 +1,5 @@
+> **Note:** this document describes XCam 2.0. Since 3.0.0 (Material 3 Expressive redesign, repository-driven recording state, MediaStore, DataStore settings) the current architecture is summarised in [CLAUDE.md](CLAUDE.md) and [README.md](README.md).
+
 # XCam Setup Guide
 
 ## Schnellstart für Entwickler
