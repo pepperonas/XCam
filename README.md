@@ -20,7 +20,7 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/pepperonas/XCam/ci.yml?branch=main&label=build&logo=github)](https://github.com/pepperonas/XCam/actions/workflows/ci.yml)
 [![Release workflow](https://img.shields.io/github/actions/workflow/status/pepperonas/XCam/release.yml?label=release&logo=githubactions)](https://github.com/pepperonas/XCam/actions/workflows/release.yml)
-[![APK size](https://img.shields.io/badge/APK-23.4%20MB-4B6BDF?logo=android&logoColor=white)](#-download)
+[![APK size](https://img.shields.io/badge/APK-23.7%20MB-4B6BDF?logo=android&logoColor=white)](#-download)
 [![ABI](https://img.shields.io/badge/ABI-arm64--v8a%20only-4B6BDF?logo=arm&logoColor=white)](#-download)
 [![languages](https://img.shields.io/badge/languages-EN%20%C2%B7%20DE-0E7C86?logo=googletranslate&logoColor=white)](app/src/main/res)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)

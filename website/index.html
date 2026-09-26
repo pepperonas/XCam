@@ -31,7 +31,7 @@
   <meta property="og:site_name" content="XCam">
   <meta property="og:url" content="https://x-cam.celox.io/">
   <meta property="og:title" content="XCam — Record with the screen off.">
-  <meta property="og:description" content="Start a recording, lock your phone, XCam keeps going. Free, open source, no internet access.">
+  <meta property="og:description" content="Start a recording, lock your phone, XCam keeps going. Free, open source, no account, no tracking.">
   <meta property="og:locale" content="en_US">
   <meta property="og:locale:alternate" content="de_DE">
   <meta property="og:locale:alternate" content="es_ES">
@@ -45,7 +45,7 @@
   <meta property="og:image:alt" content="XCam on a phone: a red record button that has turned into a stop square, a timer and a progress ring">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="XCam — Record with the screen off.">
-  <meta name="twitter:description" content="Free Android app that records video with the screen off. Open source, no internet access.">
+  <meta name="twitter:description" content="Free Android app that records video with the screen off. Open source, no account, no tracking.">
   <meta name="twitter:image" content="https://x-cam.celox.io/assets/og.jpg?v=1">
   <meta name="twitter:image:alt" content="XCam on a phone: a red record button that has turned into a stop square, a timer and a progress ring">
 
@@ -56,7 +56,7 @@
   "@type": "MobileApplication",
   "@id": "https://x-cam.celox.io/#app",
   "name": "XCam",
-  "description": "Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. The app requests no internet permission. Android 13+, 64-bit ARM, distributed as a signed APK.",
+  "description": "Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. Its only network access is an optional update check against x-cam.celox.io. Android 13+, 64-bit ARM, distributed as a signed APK.",
   "url": "https://x-cam.celox.io/",
   "image": "https://x-cam.celox.io/assets/og.jpg?v=1",
   "operatingSystem": "Android 13 or later (64-bit ARM)",
@@ -98,7 +98,8 @@
    "Built-in player with share and delete",
    "Material 3 Expressive design with light and dark theme and optional wallpaper colours",
    "English and German",
-   "No internet permission, no account, no ads, no tracking",
+   "No account, no ads, no tracking; the only network access is a switchable update check",
+   "Notifies you when a new version is released",
    "Free and open source (MIT)"
   ],
   "author": {
@@ -174,7 +175,7 @@
     "name": "How do I update?",
     "acceptedAnswer": {
      "@type": "Answer",
-     "text": "Download the newest APK from this page and install it over the app — every release from 3.0.0 on is signed with the same key. Only from version 2.x you have to uninstall once."
+     "text": "Download the newest APK from this page and install it over the app — every release from 3.0.0 on is signed with the same key. From 3.1.0 on, XCam tells you itself when a new version is out. Only from version 2.x you have to uninstall once."
     }
    },
    {
@@ -250,7 +251,7 @@
       <div class="hero-content">
         <p class="kicker" data-i18n="hero.kicker">Android · Open source · Free</p>
         <h1 data-i18n="hero.title">Tap record. <br>Turn the screen off.</h1>
-        <p class="lead" data-i18n="hero.lead">XCam keeps recording video while your phone is locked — saved straight to your gallery, stopped whenever you want. No account, no ads, no internet access.</p>
+        <p class="lead" data-i18n="hero.lead">XCam keeps recording video while your phone is locked — saved straight to your gallery, stopped whenever you want. No account, no ads, no tracking.</p>
 
         <div class="cta">
           <a class="btn primary" id="dl" href="/download" aria-describedby="dl-meta">
@@ -289,7 +290,7 @@
         </article>
         <article class="card">
           <h3 data-i18n="f6.t">Nothing leaves your phone</h3>
-          <p data-i18n="f6.p">XCam does not even request internet access. No account, no ads, no analytics — and the source code is open for anyone to check.</p>
+          <p data-i18n="f6.p">Recordings are never uploaded. The only connection XCam makes is a check for new versions at x-cam.celox.io, and you can switch it off. No account, no ads, no analytics — open source.</p>
         </article>
       </div>
     </section>
@@ -353,7 +354,7 @@
         </details>
         <details class="faq-item">
           <summary data-i18n="faq.q4">How do I update?</summary>
-          <p data-i18n="faq.q4a">Download the newest APK from this page and install it over the app — every release from 3.0.0 on is signed with the same key. Only from version 2.x you have to uninstall once.</p>
+          <p data-i18n="faq.q4a">Download the newest APK from this page and install it over the app — every release from 3.0.0 on is signed with the same key. From 3.1.0 on, XCam tells you itself when a new version is out. Only from version 2.x you have to uninstall once.</p>
         </details>
         <details class="faq-item">
           <summary data-i18n="faq.q5">Where are my recordings?</summary>

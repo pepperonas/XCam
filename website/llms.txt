@@ -1,6 +1,6 @@
 # XCam
 
-> Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. The app requests no internet permission. Android 13+, 64-bit ARM, distributed as a signed APK.
+> Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. Its only network access is an optional update check against x-cam.celox.io. Android 13+, 64-bit ARM, distributed as a signed APK.
 
 Everything below is also available without JavaScript: the page's HTML carries the current version and checksums, and `/` returns Markdown for `Accept: text/markdown`.
 
@@ -36,7 +36,7 @@ Everything below is also available without JavaScript: the page's HTML carries t
 - Stop from anywhere — or never: End the recording in the app or straight from the notification, or let it stop by itself after 5, 15, 30 or 60 minutes. A ring around the button fills as the time runs.
 - Straight into your gallery: Every recording is an MP4 in *Movies/XCam*. The app lists them by day with thumbnail, length and size — share or delete one or several at once.
 - Your camera, your quality: Back or front camera, 720p, 1080p or 4K, with or without sound. If a lens cannot do the chosen size, XCam steps down instead of failing. Settings survive a restart.
-- Nothing leaves your phone: XCam does not even request internet access. No account, no ads, no analytics — and the source code is open for anyone to check.
+- Nothing leaves your phone: Recordings are never uploaded. The only connection XCam makes is a check for new versions at x-cam.celox.io, and you can switch it off. No account, no ads, no analytics — open source.
 
 ## Scope and limits
 

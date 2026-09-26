@@ -1,7 +1,7 @@
 <!--# block name="none" --><!--# endblock -->
 # XCam — Record Video with the Screen Off (Android)
 
-> Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. The app requests no internet permission. Android 13+, 64-bit ARM, distributed as a signed APK.
+> Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. Its only network access is an optional update check against x-cam.celox.io. Android 13+, 64-bit ARM, distributed as a signed APK.
 
 This is the Markdown version of https://x-cam.celox.io/ for agents and text tools. A short summary with every link lives at https://x-cam.celox.io/llms.txt.
 
@@ -23,7 +23,7 @@ Files in the current release:
 - **Stop from anywhere — or never** — End the recording in the app or straight from the notification, or let it stop by itself after 5, 15, 30 or 60 minutes. A ring around the button fills as the time runs.
 - **Straight into your gallery** — Every recording is an MP4 in *Movies/XCam*. The app lists them by day with thumbnail, length and size — share or delete one or several at once.
 - **Your camera, your quality** — Back or front camera, 720p, 1080p or 4K, with or without sound. If a lens cannot do the chosen size, XCam steps down instead of failing. Settings survive a restart.
-- **Nothing leaves your phone** — XCam does not even request internet access. No account, no ads, no analytics — and the source code is open for anyone to check.
+- **Nothing leaves your phone** — Recordings are never uploaded. The only connection XCam makes is a check for new versions at x-cam.celox.io, and you can switch it off. No account, no ads, no analytics — open source.
 
 ## Install
 
@@ -45,7 +45,7 @@ Files in the current release:
 
 **What do I need?** A phone with Android 13 or newer and a 64-bit ARM processor — practically every phone sold since 2022. The camera permission is required; microphone and notifications are optional.
 
-**How do I update?** Download the newest APK from this page and install it over the app — every release from 3.0.0 on is signed with the same key. Only from version 2.x you have to uninstall once.
+**How do I update?** Download the newest APK from this page and install it over the app — every release from 3.0.0 on is signed with the same key. From 3.1.0 on, XCam tells you itself when a new version is out. Only from version 2.x you have to uninstall once.
 
 **Where are my recordings?** In *Movies/XCam* on your phone, as MP4 files — visible in your gallery and in the app's Videos tab. Nothing is uploaded anywhere.
 

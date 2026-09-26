@@ -6,7 +6,7 @@ license: MIT
 
 # Get XCam
 
-Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. The app requests no internet permission. Android 13+, 64-bit ARM, distributed as a signed APK.
+Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. Its only network access is an optional update check against x-cam.celox.io. Android 13+, 64-bit ARM, distributed as a signed APK.
 
 ## 1. Find the newest release
 
