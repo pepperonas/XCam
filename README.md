@@ -16,9 +16,9 @@
 
 <!-- Headline badges — ReadmeBadgesTest keeps version, test count and line counts true. -->
 [![version](https://img.shields.io/badge/version-3.1.0-E5484D?style=for-the-badge&logo=android&logoColor=white)](https://github.com/pepperonas/XCam/releases/latest)
-[![unit tests](https://img.shields.io/badge/unit%20tests-84-2E9E5B?style=for-the-badge&logo=junit5&logoColor=white)](#-testing)
+[![unit tests](https://img.shields.io/badge/unit%20tests-192-2E9E5B?style=for-the-badge&logo=junit5&logoColor=white)](#-testing)
 [![lines of code](https://img.shields.io/badge/lines%20of%20code-4.9k-4B6BDF?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/main/java/io/celox/xcam)
-[![test code](https://img.shields.io/badge/test%20code-1.1k-2E9E5B?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/test/java/io/celox/xcam)
+[![test code](https://img.shields.io/badge/test%20code-2.2k-2E9E5B?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/test/java/io/celox/xcam)
 
 <!-- Project status — live GitHub badges. -->
 [![CI](https://img.shields.io/github/actions/workflow/status/pepperonas/XCam/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white)](https://github.com/pepperonas/XCam/actions/workflows/ci.yml)
@@ -180,17 +180,18 @@ picks the release up within 15 minutes by itself, and installed apps announce it
 
 ## 🧪 Testing
 
-84 JVM unit tests (JUnit + Robolectric), run on every push by CI:
+192 JVM unit tests (JUnit + Robolectric), run on every push by CI:
 
 | Area | What is pinned |
 |---|---|
-| Recording state | `RecordingRepository` transitions, a second start is refused, errors stay visible |
+| Recording state | `RecordingRepository` transitions in every order the service can report them, a second start is refused, errors stay visible |
+| Service & notification | the start intent carries the whole config, a busy start sends nothing, the notification's stop reaches the service and nothing else does |
 | Settings | `ConfigPrefs` round trip, unknown or out-of-range values fall back, update settings |
-| Updates | version comparison, one notification per release, parsers for the site JSON and GitHub, https-only links |
-| Videos | day grouping in the right time zone, sizes and durations, Latin digits in every locale |
-| Design | WCAG AA contrast of every text/colour pair in both schemes, spacing scales, every icon builds |
-| Resources | every English string has a German one with the same format arguments; the launcher icon stays in the safe zone |
-| Docs & release | README badges match the build, CHANGELOG has the current version, the signing certificate is the same everywhere |
+| Updates | version comparison (numeric, suffixes, 4 parts, symmetry), one notification per release, parsers for the site JSON and GitHub incl. error bodies and JSON `null`, https-only links, the posted notification and where its tap leads |
+| Videos | day grouping across midnight, year end and the DST night, sizes and durations, Latin digits in every locale, sharing grants read access to every file |
+| Design | WCAG AA contrast of every text/colour pair in both schemes, spacing and size scales, semantic haptics with the Android 13 fallback, every icon builds |
+| Resources & manifest | every English string has a German one with the same format arguments, plurals complete, the launcher icon stays in the safe zone; service and receiver not exported, foreground types camera + microphone, no storage permission |
+| Docs & release | README badges match the build, CHANGELOG headings, dates and versions are well-formed, the signing certificate is the same everywhere |
 | Privacy | the app's sources name no host besides the update check, no plain http, no location/contacts permissions |
 
 ```bash

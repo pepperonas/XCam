@@ -11,6 +11,15 @@ a tag without a section here fails the workflow.
 
 ## [Unreleased]
 
+### Fixed
+- The update check no longer accepts a release manifest whose version is JSON `null`: Android's
+  `optString` turned it into the text "null", which was stored as a known release.
+
+### Tests
+- 192 unit tests (was 84): service intents and the notification stop action, the update
+  notification and where its tap leads, sharing, haptics with the Android 13 fallback, manifest,
+  resources, CHANGELOG format, and edge cases of versions, parsers, day grouping and timers.
+
 ## [3.1.0] - 2026-09-26
 
 XCam now tells you when a new version is out, and back navigation behaves.

@@ -12,8 +12,8 @@ object ReleaseParser {
     fun parseSite(body: String): AppUpdate? =
         runCatching {
             val obj = JSONObject(body)
-            val version = obj.optString("version").takeIf { it.isNotBlank() }
-            val notes = obj.optString("notes").takeIf { it.startsWith("https://") }
+            val version = obj.text("version")?.takeIf { it.isNotBlank() }
+            val notes = obj.text("notes")?.takeIf { it.startsWith("https://") }
             if (version == null || notes == null) null else AppUpdate(version, notes)
         }.getOrNull()
 
@@ -22,8 +22,14 @@ object ReleaseParser {
         runCatching {
             val obj = JSONObject(body)
             if (obj.optBoolean("draft") || obj.optBoolean("prerelease")) return@runCatching null
-            val tag = obj.optString("tag_name").takeIf { it.isNotBlank() }
-            val url = obj.optString("html_url").takeIf { it.startsWith("https://") }
+            val tag = obj.text("tag_name")?.takeIf { it.isNotBlank() }
+            val url = obj.text("html_url")?.takeIf { it.startsWith("https://") }
             if (tag == null || url == null) null else AppUpdate(tag, url)
         }.getOrNull()
+
+    /**
+     * The value when it is a JSON string, else null. Android's `optString` turns a JSON `null` into
+     * the text "null", which would pass as a release version.
+     */
+    private fun JSONObject.text(key: String): String? = opt(key) as? String
 }

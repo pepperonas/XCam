@@ -37,3 +37,21 @@ class ConstantsTest {
         assertTrue(Constants.NOTIFICATION_ID > 0)
     }
 }
+
+class ConstantsMoreTest {
+    @Test
+    fun `recordings are mp4 and the path is built from the directory name`() {
+        assertEquals("video/mp4", Constants.VIDEO_MIME_TYPE)
+        assertEquals("Movies/${Constants.VIDEO_DIRECTORY}/", Constants.RELATIVE_VIDEO_PATH)
+    }
+
+    @Test
+    fun `the wake lock tag follows the app-prefixed convention`() {
+        assertTrue(Constants.WAKE_LOCK_TAG.startsWith("XCam::"))
+    }
+
+    @Test
+    fun `the preferences file keeps its original name, or settings would be lost on update`() {
+        assertEquals("xcam_preferences", Constants.PREFERENCES_NAME)
+    }
+}

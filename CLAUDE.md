@@ -14,7 +14,7 @@ XCam is a native Android app (Kotlin, Jetpack Compose) for background video reco
 ./gradlew assembleReleaseDebug    # R8 build with debug signing
 ./gradlew installDebug
 
-./gradlew testDebugUnitTest       # 84 unit tests (JVM + Robolectric)
+./gradlew testDebugUnitTest       # 192 unit tests (JVM + Robolectric)
 ./gradlew testDebugUnitTest --tests "io.celox.xcam.data.RecordingRepositoryTest"
 ./gradlew testDebugUnitTest --tests "io.celox.xcam.util.TimeFormatTest.the*"
 
