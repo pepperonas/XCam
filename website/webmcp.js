@@ -21,6 +21,7 @@
       "Records video with the screen off (foreground service with wake lock)",
       "Stop from the app, from the notification, or automatically after 5, 15, 30 or 60 minutes",
       "Back or front camera, 720p, 1080p or 4K, with or without sound",
+      "Both cameras at once on supported phones: back camera full frame, front camera as an inset, in one video",
       "Saves MP4 files to Movies/XCam in the phone's gallery",
       "Share and delete recordings, several at once",
       "Built-in player with share and delete",

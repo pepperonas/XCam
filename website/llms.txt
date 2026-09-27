@@ -35,7 +35,7 @@ Everything below is also available without JavaScript: the page's HTML carries t
 - One button that is its state: Idle, the record button is a soft nine-lobed shape; tap it and it morphs into a stop square. What you see is what the camera reports — not a guess.
 - Stop from anywhere — or never: End the recording in the app or straight from the notification, or let it stop by itself after 5, 15, 30 or 60 minutes. A ring around the button fills as the time runs.
 - Straight into your gallery: Every recording is an MP4 in *Movies/XCam*. The app lists them by day with thumbnail, length and size — share or delete one or several at once.
-- Your camera, your quality: Back or front camera, 720p, 1080p or 4K, with or without sound. If a lens cannot do the chosen size, XCam steps down instead of failing. Settings survive a restart.
+- Front, back — or both at once: Record with the back or the front camera — or, on phones that allow it, with both: the back camera fills the video, the front one sits in a corner. 720p, 1080p or 4K (both cameras: up to 720p), with or without sound.
 - Nothing leaves your phone: Recordings are never uploaded. The only connection XCam makes is a check for new versions at x-cam.celox.io, and you can switch it off. No account, no ads, no analytics — open source.
 
 ## Scope and limits
