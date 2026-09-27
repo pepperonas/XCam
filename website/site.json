@@ -32,8 +32,8 @@
     "accent": "#e5484d"
   },
   "hero": {
-    "bg": "#120b0c",
-    "width": 2912,
+    "bg": "#180815",
+    "width": 2914,
     "height": 1440
   },
   "screens": {
@@ -76,7 +76,7 @@
       "og_title": "XCam — Record with the screen off.",
       "og_description": "Start a recording, lock your phone, XCam keeps going. Free, open source, no account, no tracking.",
       "twitter_description": "Free Android app that records video with the screen off. Open source, no account, no tracking.",
-      "image_alt": "XCam on a phone: a red record button that has turned into a stop square, a timer and a progress ring"
+      "image_alt": "XCam: a red eagle keeps watch on a camera — watches everything, stays discreet."
     },
     "summary": "Free, open-source (MIT) Android app that records video in the background with the screen off. Tap once, lock the phone, and a foreground service keeps recording; stop it in the app, from the notification or automatically after 5–60 minutes. Recordings are saved as MP4 to Movies/XCam. Its only network access is an optional update check against x-cam.celox.io. Android 13+, 64-bit ARM, distributed as a signed APK.",
     "meta_fallback": "Newest release · Android 13+ · 64-bit ARM · free, MIT licence",
@@ -252,11 +252,11 @@
       "fr": "Material 3 Expressive, clair et sombre"
     },
     "s.alt": {
-      "en": "Four screens: the record button in the light theme, recording with the time-limit ring, the recordings list and the German settings",
-      "de": "Vier Bildschirme: der Aufnahmeknopf im hellen Design, die Aufnahme mit Zeitlimit-Ring, die Aufnahmeliste und die deutschen Einstellungen",
-      "es": "Cuatro pantallas: el botón de grabar en el tema claro, la grabación con el anillo de límite, la lista de grabaciones y los ajustes en alemán",
-      "it": "Quattro schermate: il pulsante di registrazione nel tema chiaro, la registrazione con l’anello del limite, l’elenco delle registrazioni e le impostazioni in tedesco",
-      "fr": "Quatre écrans : le bouton d’enregistrement en thème clair, l’enregistrement avec l’anneau de limite, la liste des enregistrements et les réglages en allemand"
+      "en": "Four screens: the guided introduction, recording with the time-limit ring, the recordings list and the settings with update notifications",
+      "de": "Vier Bildschirme: die geführte Einführung, die Aufnahme mit Zeitlimit-Ring, die Aufnahmeliste und die Einstellungen mit Update-Hinweisen",
+      "es": "Cuatro pantallas: la introducción guiada, la grabación con el anillo de límite, la lista de grabaciones y los ajustes con avisos de actualización",
+      "it": "Quattro schermate: l’introduzione guidata, la registrazione con l’anello del limite, l’elenco delle registrazioni e le impostazioni con gli avvisi di aggiornamento",
+      "fr": "Quatre écrans : l’introduction guidée, l’enregistrement avec l’anneau de limite, la liste des enregistrements et les réglages avec les avis de mise à jour"
     },
     "install": [
       {
