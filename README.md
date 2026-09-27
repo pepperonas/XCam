@@ -16,9 +16,9 @@
 
 <!-- Headline badges — ReadmeBadgesTest keeps version, test count and line counts true. -->
 [![version](https://img.shields.io/badge/version-3.1.0-E5484D?style=for-the-badge&logo=android&logoColor=white)](https://github.com/pepperonas/XCam/releases/latest)
-[![unit tests](https://img.shields.io/badge/unit%20tests-192-2E9E5B?style=for-the-badge&logo=junit5&logoColor=white)](#-testing)
-[![lines of code](https://img.shields.io/badge/lines%20of%20code-4.9k-4B6BDF?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/main/java/io/celox/xcam)
-[![test code](https://img.shields.io/badge/test%20code-2.2k-2E9E5B?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/test/java/io/celox/xcam)
+[![unit tests](https://img.shields.io/badge/unit%20tests-208-2E9E5B?style=for-the-badge&logo=junit5&logoColor=white)](#-testing)
+[![lines of code](https://img.shields.io/badge/lines%20of%20code-5.1k-4B6BDF?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/main/java/io/celox/xcam)
+[![test code](https://img.shields.io/badge/test%20code-2.3k-2E9E5B?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/test/java/io/celox/xcam)
 
 <!-- Project status — live GitHub badges. -->
 [![CI](https://img.shields.io/github/actions/workflow/status/pepperonas/XCam/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white)](https://github.com/pepperonas/XCam/actions/workflows/ci.yml)
@@ -46,7 +46,7 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-1.11-4285F4?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Material 3 Expressive](https://img.shields.io/badge/Material%203-Expressive-E5484D?logo=materialdesign&logoColor=white)](https://m3.material.io/blog/m3-expressive-motion-theming)
-[![CameraX](https://img.shields.io/badge/CameraX-1.4-3DDC84?logo=android&logoColor=white)](https://developer.android.com/media/camera/camerax)
+[![CameraX](https://img.shields.io/badge/CameraX-1.5-3DDC84?logo=android&logoColor=white)](https://developer.android.com/media/camera/camerax)
 [![Media3](https://img.shields.io/badge/Media3-ExoPlayer-3DDC84?logo=android&logoColor=white)](https://developer.android.com/media/media3)
 [![WorkManager](https://img.shields.io/badge/WorkManager-2.10-3DDC84?logo=android&logoColor=white)](https://developer.android.com/topic/libraries/architecture/workmanager)
 [![languages](https://img.shields.io/badge/languages-EN%20%C2%B7%20DE-0E7C86?logo=googletranslate&logoColor=white)](app/src/main/res)
@@ -83,6 +83,9 @@
   15, 30 or 60 minutes (enforced by CameraX); a ring around the button fills as the time runs.
 - **Straight into your gallery** — MP4 files in `Movies/XCam`, listed by day with thumbnail, length and
   size; share or delete one or several at once (long press); built-in player with share and delete.
+- **Both cameras at once** — on phones that let apps run two cameras together, *Both* records the
+  back camera full frame with the front camera as a small inset, in one video (up to 720p). The
+  option only appears where the phone supports it; Settings says whether yours does.
 - **Your camera, your quality** — back or front, 720p / 1080p / 4K, with or without sound; if a lens
   cannot do the chosen size XCam steps down instead of failing. All settings are saved.
 - **Tells you about updates** — a notification (once per release) and a hint in the app when a new
@@ -180,10 +183,11 @@ picks the release up within 15 minutes by itself, and installed apps announce it
 
 ## 🧪 Testing
 
-192 JVM unit tests (JUnit + Robolectric), run on every push by CI:
+208 JVM unit tests (JUnit + Robolectric), run on every push by CI:
 
 | Area | What is pinned |
 |---|---|
+| Both cameras | the front+back pair is found in the device's concurrent combinations, the inset stays inside the frame, dual recordings are capped at 720p, a saved choice falls back to the back camera where unsupported |
 | Recording state | `RecordingRepository` transitions in every order the service can report them, a second start is refused, errors stay visible |
 | Service & notification | the start intent carries the whole config, a busy start sends nothing, the notification's stop reaches the service and nothing else does |
 | Settings | `ConfigPrefs` round trip, unknown or out-of-range values fall back, update settings |

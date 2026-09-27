@@ -114,6 +114,7 @@ fun RecordScreen(
     onQualityChange: (VideoQuality) -> Unit,
     onAudioChange: (Boolean) -> Unit,
     onOpenVideo: (VideoFile) -> Unit,
+    dualCameraSupported: Boolean = false,
 ) {
     Scaffold(
         topBar = {
@@ -173,6 +174,7 @@ fun RecordScreen(
                 config = config,
                 locked = state.isBusy,
                 audioAllowed = permissions.audio,
+                dualCameraSupported = dualCameraSupported,
                 onLensChange = onLensChange,
                 onQualityChange = onQualityChange,
                 onAudioChange = { enabled ->
@@ -460,6 +462,7 @@ private fun QuickSetup(
     config: RecordingConfig,
     locked: Boolean,
     audioAllowed: Boolean,
+    dualCameraSupported: Boolean,
     onLensChange: (Int) -> Unit,
     onQualityChange: (VideoQuality) -> Unit,
     onAudioChange: (Boolean) -> Unit,
@@ -478,11 +481,18 @@ private fun QuickSetup(
             }
         }
         SegmentedToggle(
-            options = CameraLens.entries.map { it.selector to stringResource(it.labelRes) },
+            options = CameraLens.options(dualCameraSupported).map { it.selector to stringResource(it.labelRes) },
             selected = config.cameraLens,
             onSelect = onLensChange,
             enabled = !locked,
         )
+        AnimatedVisibility(visible = config.isDual) {
+            Text(
+                stringResource(R.string.lens_both_hint),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         SegmentedToggle(
             options = VideoQuality.entries.map { it to stringResource(it.shortLabelRes) },
             selected = config.videoQuality,

@@ -15,6 +15,7 @@ import io.celox.xcam.data.model.ThemeMode
 import io.celox.xcam.data.model.VideoFile
 import io.celox.xcam.data.model.VideoQuality
 import io.celox.xcam.data.update.UpdateWatcher
+import io.celox.xcam.service.DualCamera
 import io.celox.xcam.service.RecordingService
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -43,9 +45,13 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
     val settings: StateFlow<AppSettings?> =
         preferences.settings.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    /** Whether this device lets apps record with front and back camera at once (checked once). */
+    private val _dualCameraSupported = MutableStateFlow(false)
+    val dualCameraSupported: StateFlow<Boolean> = _dualCameraSupported.asStateFlow()
+
+    /** The saved config, with "both cameras" resolved to the back camera where the device cannot do it. */
     val recordingConfig: StateFlow<RecordingConfig> =
-        preferences.settings
-            .map { it.recording }
+        combine(preferences.settings, _dualCameraSupported) { s, dual -> s.recording.resolvedFor(dual) }
             .stateIn(viewModelScope, SharingStarted.Eagerly, RecordingConfig())
 
     private val _videoFiles = MutableStateFlow<List<VideoFile>>(emptyList())
@@ -66,6 +72,9 @@ class RecordingViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     init {
+        viewModelScope.launch {
+            _dualCameraSupported.value = runCatching { DualCamera.isSupported(application) }.getOrDefault(false)
+        }
         loadVideoFiles()
         // Refresh when MediaStore changes or a recording was finalized (the observer can lag behind).
         viewModelScope.launch {

@@ -14,7 +14,7 @@ XCam is a native Android app (Kotlin, Jetpack Compose) for background video reco
 ./gradlew assembleReleaseDebug    # R8 build with debug signing
 ./gradlew installDebug
 
-./gradlew testDebugUnitTest       # 192 unit tests (JVM + Robolectric)
+./gradlew testDebugUnitTest       # 208 unit tests (JVM + Robolectric)
 ./gradlew testDebugUnitTest --tests "io.celox.xcam.data.RecordingRepositoryTest"
 ./gradlew testDebugUnitTest --tests "io.celox.xcam.util.TimeFormatTest.the*"
 
@@ -43,6 +43,7 @@ MVVM with Compose, no DI. One `RecordingViewModel` (AndroidViewModel), obtained 
 - Stop flow: `stopRecordingVideo()` calls `recording.stop()` and waits for `Finalize` (5 s fallback) before `stopForeground`/`stopSelf`.
 - Max duration is enforced by CameraX (`MediaStoreOutputOptions.setDurationLimitMillis`), passed via `EXTRA_MAX_DURATION_MS`.
 - Notification uses the system chronometer (`setUsesChronometer`), not a per-second rebuild. Stop action → `RecordingActionReceiver`.
+- **Both cameras (CameraX 1.5 concurrent camera):** `cameraLens == CameraLens.DUAL_SELECTOR` (100, no CameraX constant). `DualCamera.isSupported` = `FEATURE_CAMERA_CONCURRENT` + a front/back pair in `availableConcurrentCameraInfos`; the ViewModel checks once, `RecordingConfig.resolvedFor()` turns a saved dual choice into the back camera where unsupported, and `CameraLens.options()` hides *Both*. CameraX composes both cameras into ONE video only when the shared `UseCaseGroup` is exactly **Preview + VideoCapture** (read from the 1.5.3 bytecode; without Preview it binds them separately) — the service has no screen, so `DiscardingPreview` feeds the Preview into an `ImageReader` that closes every frame. `effectiveQuality` caps dual at 720p (Android's guarantee for concurrent streams). Verified only in unit tests + build: the emulator has no concurrent cameras, the real check is on a device.
 - `startRecording(audioAllowed)` drops audio when RECORD_AUDIO is missing (CameraX `withAudioEnabled()` would throw).
 - `QualitySelector` has a fallback to lower quality.
 

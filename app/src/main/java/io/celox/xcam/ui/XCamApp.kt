@@ -120,6 +120,7 @@ private fun MainShell(
     val config by viewModel.recordingConfig.collectAsStateWithLifecycle()
     val videos by viewModel.videoFiles.collectAsStateWithLifecycle()
     val videosLoading by viewModel.videosLoading.collectAsStateWithLifecycle()
+    val dualCameraSupported by viewModel.dualCameraSupported.collectAsStateWithLifecycle()
 
     val showBar = Destination.tabIndexOf(currentRoute) >= 0
 
@@ -181,6 +182,7 @@ private fun MainShell(
                     onQualityChange = viewModel::updateVideoQuality,
                     onAudioChange = viewModel::updateEnableAudio,
                     onOpenVideo = { navController.openPlayer(it.id) },
+                    dualCameraSupported = dualCameraSupported,
                 )
             }
             composable(Destination.VIDEOS.route) {
@@ -207,6 +209,7 @@ private fun MainShell(
                     onThemeChange = viewModel::updateThemeMode,
                     onDynamicColorChange = viewModel::updateDynamicColor,
                     onUpdateChecksChange = viewModel::updateUpdateChecks,
+                    dualCameraSupported = dualCameraSupported,
                 )
             }
             composable(

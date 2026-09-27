@@ -53,9 +53,10 @@ fun SettingsScreen(
     onThemeChange: (ThemeMode) -> Unit,
     onDynamicColorChange: (Boolean) -> Unit,
     onUpdateChecksChange: (Boolean) -> Unit,
+    dualCameraSupported: Boolean = false,
 ) {
     val haptics = rememberHaptics()
-    val config = settings.recording
+    val config = settings.recording.resolvedFor(dualCameraSupported)
     Scaffold(
         topBar = {
             TopAppBar(title = { Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLargeEmphasized) })
@@ -80,10 +81,21 @@ fun SettingsScreen(
                 }
                 LabeledIcon(XIcons.CameraSwitch, stringResource(R.string.setting_camera))
                 SegmentedToggle(
-                    options = CameraLens.entries.map { it.selector to stringResource(it.labelRes) },
+                    options = CameraLens.options(dualCameraSupported).map { it.selector to stringResource(it.labelRes) },
                     selected = config.cameraLens,
                     onSelect = onLensChange,
                     enabled = !locked,
+                )
+                Text(
+                    stringResource(
+                        when {
+                            config.isDual -> R.string.lens_both_hint
+                            dualCameraSupported -> R.string.lens_both_available
+                            else -> R.string.lens_both_unsupported
+                        },
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 LabeledIcon(XIcons.HighQuality, stringResource(R.string.setting_quality))
                 SegmentedToggle(

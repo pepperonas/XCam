@@ -13,6 +13,20 @@ data class RecordingConfig(
 ) {
     val maxDurationMillis: Long get() = maxDurationMinutes * 60_000L
 
+    /** Front and back camera at once, composed into one video (back full frame, front inset). */
+    val isDual: Boolean get() = cameraLens == CameraLens.DUAL_SELECTOR
+
+    /**
+     * The quality actually requested from CameraX. Two cameras at once are only guaranteed up to
+     * 720p per camera, so a dual recording is capped there instead of failing to bind.
+     */
+    val effectiveQuality: VideoQuality
+        get() = if (isDual && videoQuality > VideoQuality.HD_720P) VideoQuality.HD_720P else videoQuality
+
+    /** A saved "both cameras" choice on a device that cannot do it falls back to the back camera. */
+    fun resolvedFor(dualSupported: Boolean): RecordingConfig =
+        if (isDual && !dualSupported) copy(cameraLens = CameraSelector.LENS_FACING_BACK) else this
+
     companion object {
         /** The choices offered in Settings; 0 = unlimited. */
         val MAX_DURATION_OPTIONS = listOf(0, 5, 15, 30, 60)
@@ -36,13 +50,23 @@ enum class VideoQuality(
     }
 }
 
+/** Top level, not in the companion: an enum entry cannot read its own companion while initializing. */
+const val DUAL_LENS_SELECTOR = 100
+
 enum class CameraLens(@StringRes val labelRes: Int, val selector: Int) {
     BACK(R.string.lens_back, CameraSelector.LENS_FACING_BACK),
     FRONT(R.string.lens_front, CameraSelector.LENS_FACING_FRONT),
+    BOTH(R.string.lens_both, DUAL_LENS_SELECTOR),
     ;
 
     companion object {
+        /** Stored in [RecordingConfig.cameraLens] for "both cameras"; no CameraX lens constant uses it. */
+        const val DUAL_SELECTOR = DUAL_LENS_SELECTOR
+
         fun fromSelector(selector: Int): CameraLens = entries.firstOrNull { it.selector == selector } ?: BACK
+
+        /** The choices to offer: "both" only where the device lets apps use two cameras at once. */
+        fun options(dualSupported: Boolean): List<CameraLens> = entries.filter { it != BOTH || dualSupported }
     }
 }
 

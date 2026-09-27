@@ -38,6 +38,10 @@
     <!-- Camera / quality / audio -->
     <string name="lens_back">Hinten</string>
     <string name="lens_front">Vorne</string>
+    <string name="lens_both">Beide</string>
+    <string name="lens_both_hint">Rückkamera mit der Frontkamera als kleinem Bild, in einem Video – höchstens 720p.</string>
+    <string name="lens_both_available">Dieses Gerät kann mit beiden Kameras gleichzeitig aufnehmen.</string>
+    <string name="lens_both_unsupported">Dieses Gerät gibt beide Kameras nicht gleichzeitig für Apps frei.</string>
     <string name="setting_camera">Kamera</string>
     <string name="setting_quality">Qualität</string>
     <string name="quality_720_long">720p HD</string>

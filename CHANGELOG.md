@@ -11,6 +11,16 @@ a tag without a section here fails the workflow.
 
 ## [Unreleased]
 
+### Added
+- **Both cameras at once.** On phones that let apps run front and back camera together, the camera
+  choice offers *Both*: the back camera fills the video, the front camera sits in a corner as a small
+  inset, in one file. Two cameras at once are only guaranteed at 720p, so such a recording is capped
+  there (the chosen quality is kept for single-camera recordings). Settings tells you whether your
+  phone supports it; where it does not, the option does not appear.
+
+### Changed
+- CameraX 1.4.2 → 1.5.3 (public composition API for two cameras in one video).
+
 ### Fixed
 - The update check no longer accepts a release manifest whose version is JSON `null`: Android's
   `optString` turned it into the text "null", which was stored as a known release.

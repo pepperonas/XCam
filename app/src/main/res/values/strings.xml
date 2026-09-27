@@ -40,6 +40,10 @@
     <!-- Camera / quality / audio -->
     <string name="lens_back">Back</string>
     <string name="lens_front">Front</string>
+    <string name="lens_both">Both</string>
+    <string name="lens_both_hint">Back camera with the front camera as a small inset, in one video — up to 720p.</string>
+    <string name="lens_both_available">This phone can record with both cameras at once.</string>
+    <string name="lens_both_unsupported">This phone does not let apps use both cameras at once.</string>
     <string name="setting_camera">Camera</string>
     <string name="setting_quality">Quality</string>
     <string name="quality_720" translatable="false">720p</string>

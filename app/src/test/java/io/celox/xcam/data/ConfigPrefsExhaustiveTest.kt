@@ -38,6 +38,11 @@ class ConfigPrefsExhaustiveTest {
     }
 
     @Test
+    fun `the both-cameras choice round-trips`() {
+        assertEquals(io.celox.xcam.data.model.CameraLens.DUAL_SELECTOR, decode(lens = io.celox.xcam.data.model.CameraLens.DUAL_SELECTOR).recording.cameraLens)
+    }
+
+    @Test
     fun `an external or unknown lens falls back to the back camera`() {
         listOf(CameraSelector.LENS_FACING_EXTERNAL, -1, Int.MAX_VALUE).forEach {
             assertEquals(CameraSelector.LENS_FACING_BACK, decode(lens = it).recording.cameraLens)

@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import io.celox.xcam.data.model.CameraLens
 import io.celox.xcam.data.model.RecordingConfig
 import io.celox.xcam.data.model.ThemeMode
 import io.celox.xcam.data.model.VideoQuality
@@ -55,7 +56,7 @@ object ConfigPrefs {
             recording =
             RecordingConfig(
                 cameraLens =
-                lens?.takeIf { it == CameraSelector.LENS_FACING_BACK || it == CameraSelector.LENS_FACING_FRONT }
+                lens?.takeIf { it == CameraSelector.LENS_FACING_BACK || it == CameraSelector.LENS_FACING_FRONT || it == CameraLens.DUAL_SELECTOR }
                     ?: defaults.recording.cameraLens,
                 videoQuality = VideoQuality.fromName(quality),
                 enableAudio = audio ?: defaults.recording.enableAudio,

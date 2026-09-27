@@ -14,6 +14,8 @@ import android.os.PowerManager
 import android.provider.MediaStore
 import android.util.Log
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ConcurrentCamera
+import androidx.camera.core.UseCaseGroup
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.MediaStoreOutputOptions
 import androidx.camera.video.Quality
@@ -54,6 +56,7 @@ class RecordingService : LifecycleService() {
     private var recording: Recording? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private var finalizeTimeout: Job? = null
+    private var discardingPreview: DiscardingPreview? = null
     private lateinit var config: RecordingConfig
 
     private lateinit var notificationManager: NotificationManager
@@ -165,7 +168,7 @@ class RecordingService : LifecycleService() {
                     Recorder.Builder()
                         .setQualitySelector(
                             QualitySelector.from(
-                                when (config.videoQuality) {
+                                when (config.effectiveQuality) {
                                     VideoQuality.HD_720P -> Quality.HD
                                     VideoQuality.HD_1080P -> Quality.FHD
                                     VideoQuality.UHD_4K -> Quality.UHD
@@ -175,10 +178,14 @@ class RecordingService : LifecycleService() {
                             ),
                         ).build()
                 val videoCapture = VideoCapture.withOutput(recorder)
-                val cameraSelector = CameraSelector.Builder().requireLensFacing(config.cameraLens).build()
 
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(this@RecordingService, cameraSelector, videoCapture)
+                if (config.isDual) {
+                    bindBothCameras(cameraProvider, videoCapture)
+                } else {
+                    val cameraSelector = CameraSelector.Builder().requireLensFacing(config.cameraLens).build()
+                    cameraProvider.bindToLifecycle(this@RecordingService, cameraSelector, videoCapture)
+                }
 
                 startRecordingToFile(recorder)
             } catch (e: Exception) {
@@ -186,6 +193,28 @@ class RecordingService : LifecycleService() {
                 fail(RecordingState.Reason.CAMERA_UNAVAILABLE, e.message)
             }
         }
+    }
+
+    /**
+     * Back camera full frame, front camera as an inset, composed by CameraX into one video. Needs a
+     * Preview next to the VideoCapture (see [DualCamera]); a device without a front+back concurrent
+     * pair throws here and the recording fails visibly instead of silently using one camera.
+     */
+    private fun bindBothCameras(
+        provider: ProcessCameraProvider,
+        videoCapture: VideoCapture<Recorder>,
+    ) {
+        val (back, front) =
+            DualCamera.pairOf(provider)
+                ?: throw IllegalStateException("This device cannot run front and back camera at once")
+        val preview = DiscardingPreview(this).also { discardingPreview = it }
+        val group = UseCaseGroup.Builder().addUseCase(preview.preview).addUseCase(videoCapture).build()
+        provider.bindToLifecycle(
+            listOf(
+                ConcurrentCamera.SingleCameraConfig(back.cameraSelector, group, DualCamera.PRIMARY, this),
+                ConcurrentCamera.SingleCameraConfig(front.cameraSelector, group, DualCamera.INSET, this),
+            ),
+        )
     }
 
     // Permissions are verified by the UI before the service is started.
@@ -272,6 +301,8 @@ class RecordingService : LifecycleService() {
     }
 
     private fun shutdown() {
+        discardingPreview?.release()
+        discardingPreview = null
         releaseWakeLock()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -340,6 +371,8 @@ class RecordingService : LifecycleService() {
         finalizeTimeout?.cancel()
         recording?.close()
         recording = null
+        discardingPreview?.release()
+        discardingPreview = null
         releaseWakeLock()
         RecordingRepository.onServiceDestroyed()
         super.onDestroy()
