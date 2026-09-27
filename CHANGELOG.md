@@ -11,6 +11,8 @@ a tag without a section here fails the workflow.
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-09-27
+
 ### Added
 - **Both cameras at once.** On phones that let apps run front and back camera together, the camera
   choice offers *Both*: the back camera fills the video, the front camera sits in a corner as a small

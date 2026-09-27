@@ -15,7 +15,7 @@
 <h3>👉 <a href="https://x-cam.celox.io">x-cam.celox.io</a> — features, install guide, FAQ and always the newest APK</h3>
 
 <!-- Headline badges — ReadmeBadgesTest keeps version, test count and line counts true. -->
-[![version](https://img.shields.io/badge/version-3.1.0-E5484D?style=for-the-badge&logo=android&logoColor=white)](https://github.com/pepperonas/XCam/releases/latest)
+[![version](https://img.shields.io/badge/version-3.2.0-E5484D?style=for-the-badge&logo=android&logoColor=white)](https://github.com/pepperonas/XCam/releases/latest)
 [![unit tests](https://img.shields.io/badge/unit%20tests-208-2E9E5B?style=for-the-badge&logo=junit5&logoColor=white)](#-testing)
 [![lines of code](https://img.shields.io/badge/lines%20of%20code-5.1k-4B6BDF?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/main/java/io/celox/xcam)
 [![test code](https://img.shields.io/badge/test%20code-2.3k-2E9E5B?style=for-the-badge&logo=kotlin&logoColor=white)](app/src/test/java/io/celox/xcam)
@@ -110,7 +110,7 @@ resumable copy from the site itself — or grab it from
 | Checksum | `SHA256SUMS.txt` in every release, and on the website |
 
 ```bash
-apksigner verify --print-certs xcam-v3.1.0.apk | grep SHA-256   # must print the digest above
+apksigner verify --print-certs xcam-v3.2.0.apk | grep SHA-256   # must print the digest above
 sha256sum -c SHA256SUMS.txt
 ```
 
